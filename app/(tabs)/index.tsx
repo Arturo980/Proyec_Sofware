@@ -12,6 +12,7 @@ export default function MainScreen() {
       <Button title="Go to Home" onPress={() => router.push('./home')} />
       <Button title="Go to Profile" onPress={() => router.push('./profile')} />
       <Button title="Go to Settings" onPress={() => router.push('./settings')} />
+      <Button title="Go to Recurso" onPress={() => router.push('./resource')} />
     </View>
   );
 }
