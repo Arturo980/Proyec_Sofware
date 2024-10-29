@@ -1,41 +1,38 @@
-// app/home.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import Svg, { Polygon, Image as SvgImage } from 'react-native-svg';
 
 export default function HomeScreen() {
-  const router = useRouter();
+  const navigation = useNavigation();  // Usa el hook para obtener la navegación
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Actividad</Text>
-      <View style={styles.grid}>
-        <TouchableOpacity style={styles.card}
-        onPress={() => router.push('./resource')}>
-          <FontAwesome name="check-square-o" size={30} color="black" />
-          <Text style={styles.cardText}>Nivel de Recurso</Text>
-        </TouchableOpacity>
+      <Text style={styles.header}>Home</Text>
 
-        <TouchableOpacity style={styles.card}>
-          <FontAwesome name="info-circle" size={30} color="black" />
-          <Text style={styles.cardText}>Estado</Text>
+      <Svg height="300" width="300" style={styles.hexagon}>
+        <Polygon
+          points="150,0 300,75 300,225 150,300 0,225 0,75"
+          fill="#F0A500"
+        />
+        <SvgImage
+          href={require('@/assets/images/minetrack.png')} // Asegúrate de que esta ruta sea correcta
+          x="50" // Ajusta la posición de la imagen dentro del hexágono
+          y="25" // Ajusta la posición de la imagen dentro del hexágono
+          width="200" // Ajusta el tamaño de la imagen
+          height="200" // Ajusta el tamaño de la imagen
+          preserveAspectRatio="xMidYMid slice"
+        />
+      </Svg>
+      <Text style={styles.header}>Gestión de Datos</Text>
+      <View style={styles.cardContainer}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Turnos')}>
+          <Text style={styles.cardText}>Turnos</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <MaterialIcons name="description" size={30} color="black" />
-          <Text style={styles.cardText}>Observaciones</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <FontAwesome name="map-marker" size={30} color="black" />
-          <Text style={styles.cardText}>Ubicación</Text>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Equipos')}>
+          <Text style={styles.cardText}>Equipos</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.fab}>
-        <FontAwesome name="share" size={24} color="white" />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -43,44 +40,41 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#B3B3B3',
+    backgroundColor: '#4E4E4E',
     alignItems: 'center',
     paddingTop: 40,
+  },
+  hexagon: {
+    marginVertical: 20,
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 20,
+    marginVertical: 20,
   },
-  grid: {
+  cardContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    width: '90%',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginVertical: 50,
   },
   card: {
-    backgroundColor: '#fff',
-    width: '40%',
-    height: 120,
-    margin: 10,
+    backgroundColor: '#F0A500',
+    width: '30%',
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
+    margin: 10,
   },
   cardText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: 'black',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    backgroundColor: '#666',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
+
+
+
+

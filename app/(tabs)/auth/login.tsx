@@ -16,7 +16,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       {/* Logo */}
-      <Image source={require('../../../assets/images/minetrack.png')} style={styles.logo} />
+      <Image source={require('@/assets/images/minetrack.png')} style={styles.logo} />
 
       {/* Título */}
       <Text style={styles.subtitle}>Inicia sesión</Text>
