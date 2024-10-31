@@ -1,16 +1,27 @@
-// app/auth/login.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const router = useRouter();
 
-  const handleLogin = () => {
-    console.log('Login successful');
-    router.push('/home'); // Navega a la pantalla principal después del login
+  const handleLogin = async () => {
+    // Verifica si el nombre tiene al menos 3 caracteres
+    if (name.length < 3) {
+      Alert.alert('Error', 'Error Campo vacío');
+      return; // Evita continuar si el nombre es inválido
+    }
+
+    try {
+      // Guarda el nombre en AsyncStorage
+      await AsyncStorage.setItem('userName', name);
+      console.log('Login successful');
+      router.push('/home'); // Navega a la pantalla principal después del login
+    } catch (error) {
+      console.error('Error saving name to AsyncStorage:', error);
+    }
   };
 
   return (
@@ -19,42 +30,25 @@ export default function LoginScreen() {
       <Image source={require('@/assets/images/minetrack.png')} style={styles.logo} />
 
       {/* Título */}
-      <Text style={styles.subtitle}>Inicia sesión</Text>
+      <Text style={styles.subtitle}>Ingrese su nombre</Text>
 
-      {/* Campo de Email */}
+      {/* Campo de Nombre */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Email address"
-          value={email}
-          onChangeText={setEmail}
+          placeholder="Tu nombre"
+          value={name}
+          onChangeText={setName}
+          onSubmitEditing={handleLogin} // Redirige al presionar Enter
+          returnKeyType="done" // Cambia el tipo de botón de retorno
         />
       </View>
 
-      {/* Campo de Password */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          secureTextEntry
-          onChangeText={setPassword}
-        />
-      </View>
-
-      {/* Botón de inicio de sesión */}
+      {/* Botón de inicio de sesión (opcional) */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Iniciar sesión</Text>
+        <Text style={styles.buttonText}>Siguiente</Text>
       </TouchableOpacity>
 
-      {/* ¿Olvidaste tu contraseña? y Registro */}
-      <TouchableOpacity onPress={() => { /* Navegar a la pantalla de recuperación */ }}>
-        <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => { /* Navegar a la pantalla de registro */ }}>
-        <Text style={styles.register}>¡Regístrate!</Text>
-      </TouchableOpacity>
     </View>
   );
 }

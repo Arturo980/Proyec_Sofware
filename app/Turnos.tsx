@@ -16,43 +16,43 @@ export default function TurnosScreen() {
   const [turnos, setTurnos] = useState([]);
   const [showForm, setShowForm] = useState(false);
 
-  // Cargar los turnos desde AsyncStorage
-  const loadTurnos = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem('turnos');
-      if (jsonValue != null) {
-        setTurnos(JSON.parse(jsonValue));
-      }
-    } catch (e) {
-      console.error("Error loading turnos", e);
-    }
-  };
-
-  // Guardar turnos en AsyncStorage
-  const saveTurnos = async (newTurnos) => {
-    try {
-      const jsonValue = JSON.stringify(newTurnos);
-      await AsyncStorage.setItem('turnos', jsonValue);
-    } catch (e) {
-      console.error("Error saving turnos", e);
-    }
-  };
-
+  // Cargar los turnos desde AsyncStorage al inicio
   useEffect(() => {
-    loadTurnos(); // Cargar turnos al iniciar el componente
+    const loadTurnos = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('turnos');
+        if (jsonValue != null) {
+          setTurnos(JSON.parse(jsonValue));
+        }
+      } catch (e) {
+        console.error("Error loading turnos", e);
+      }
+    };
+    loadTurnos();
   }, []);
+
+  // Guardar los turnos automáticamente cuando cambian
+  useEffect(() => {
+    const saveTurnos = async () => {
+      try {
+        const jsonValue = JSON.stringify(turnos);
+        await AsyncStorage.setItem('turnos', jsonValue);
+      } catch (e) {
+        console.error("Error saving turnos", e);
+      }
+    };
+    saveTurnos();
+  }, [turnos]);
 
   const handleAddTurno = () => {
     const newTurno = {
-      fecha: new Date().toLocaleDateString('es-ES'), // Formato DD/MM/YYYY
+      fecha: new Date().toLocaleDateString('es-ES'),
       ...turnoData,
     };
 
-    const updatedTurnos = [...turnos, newTurno];
-    setTurnos(updatedTurnos);
-    saveTurnos(updatedTurnos); // Guardar turnos actualizados
-    setShowForm(false); // Ocultar el formulario
-    resetForm(); // Resetear el formulario
+    setTurnos([...turnos, newTurno]);
+    setShowForm(false);
+    resetForm();
   };
 
   const resetForm = () => {
@@ -72,16 +72,11 @@ export default function TurnosScreen() {
       'Eliminar Turno',
       '¿Estás seguro de que deseas eliminar este turno?',
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
           onPress: () => {
-            const updatedTurnos = turnos.filter((_, i) => i !== index);
-            setTurnos(updatedTurnos);
-            saveTurnos(updatedTurnos); // Guardar turnos actualizados
+            setTurnos(turnos.filter((_, i) => i !== index));
           },
         },
       ],
@@ -113,48 +108,13 @@ export default function TurnosScreen() {
 
       {showForm && (
         <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Turno Saliente"
-            style={styles.input}
-            value={turnoData.turnoSaliente}
-            onChangeText={(text) => setTurnoData({ ...turnoData, turnoSaliente: text })}
-          />
-          <TextInput
-            placeholder="Nombre Saliente"
-            style={styles.input}
-            value={turnoData.nombreSaliente}
-            onChangeText={(text) => setTurnoData({ ...turnoData, nombreSaliente: text })}
-          />
-          <TextInput
-            placeholder="Grupo Saliente"
-            style={styles.input}
-            value={turnoData.grupoSaliente}
-            onChangeText={(text) => setTurnoData({ ...turnoData, grupoSaliente: text })}
-          />
-          <TextInput
-            placeholder="Postura"
-            style={styles.input}
-            value={turnoData.postura}
-            onChangeText={(text) => setTurnoData({ ...turnoData, postura: text })}
-          />
-          <TextInput
-            placeholder="Estatus Final Reportado"
-            style={styles.input}
-            value={turnoData.estatusFinal}
-            onChangeText={(text) => setTurnoData({ ...turnoData, estatusFinal: text })}
-          />
-          <TextInput
-            placeholder="Estatus Real"
-            style={styles.input}
-            value={turnoData.estatusReal}
-            onChangeText={(text) => setTurnoData({ ...turnoData, estatusReal: text })}
-          />
-          <TextInput
-            placeholder="Observación"
-            style={styles.input}
-            value={turnoData.observacion}
-            onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })}
-          />
+          <TextInput placeholder="Turno Saliente" style={styles.input} value={turnoData.turnoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, turnoSaliente: text })} />
+          <TextInput placeholder="Nombre Saliente" style={styles.input} value={turnoData.nombreSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, nombreSaliente: text })} />
+          <TextInput placeholder="Grupo Saliente" style={styles.input} value={turnoData.grupoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, grupoSaliente: text })} />
+          <TextInput placeholder="Postura" style={styles.input} value={turnoData.postura} onChangeText={(text) => setTurnoData({ ...turnoData, postura: text })} />
+          <TextInput placeholder="Estatus Final Reportado" style={styles.input} value={turnoData.estatusFinal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusFinal: text })} />
+          <TextInput placeholder="Estatus Real" style={styles.input} value={turnoData.estatusReal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusReal: text })} />
+          <TextInput placeholder="Observación" style={styles.input} value={turnoData.observacion} onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })} />
           <TouchableOpacity style={styles.button} onPress={handleAddTurno}>
             <Text style={styles.buttonText}>Agregar Turno</Text>
           </TouchableOpacity>
@@ -174,12 +134,17 @@ export default function TurnosScreen() {
           <Text style={styles.headerCell}>Observación</Text>
           <Text style={styles.headerCell}>Acción</Text>
         </View>
-        <FlatList
-          data={turnos}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => index.toString()}
-          style={styles.list}
-        />
+        
+        {turnos.length === 0 ? (
+          <Text style={styles.noDataText}>No hay turnos registrados.</Text> // Mensaje cuando no hay datos
+        ) : (
+          <FlatList
+            data={turnos}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => index.toString()}
+            style={styles.list}
+          />
+        )}
       </View>
     </View>
   );
@@ -190,12 +155,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#4E4E4E',
     padding: 20,
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#fff',
   },
   input: {
     width: '100%',
@@ -219,7 +178,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tableContainer: {
-    backgroundColor: '#fff', // Color de fondo de la tabla
+    backgroundColor: '#fff',
     padding: 10,
     borderRadius: 10,
     marginTop: 20,
@@ -243,7 +202,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#F0A500', // Color amarillo para el botón
+    backgroundColor: '#F0A500',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -255,16 +214,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   actionButton: {
-    backgroundColor: '#FF6B6B', // Color para el botón de eliminar
-    padding: 10,
+    backgroundColor: 'red',
+    padding: 5,
     borderRadius: 5,
-    alignItems: 'center',
+    marginLeft: 10,
   },
   actionText: {
     color: 'white',
-    fontWeight: 'bold',
+  },
+  noDataText: {
+    textAlign: 'center',
+    color: 'gray',
+    marginVertical: 20,
   },
 });
+
 
 
 

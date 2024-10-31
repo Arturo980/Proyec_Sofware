@@ -171,12 +171,17 @@ export default function EquiposScreen() {
           <Text style={styles.headerCell}>Observación</Text>
           <Text style={styles.headerCell}>Acción</Text>
         </View>
-        <FlatList
-          data={equipos}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => index.toString()}
-          style={styles.list}
-        />
+        
+        {equipos.length === 0 ? ( // Verificación de equipos
+          <Text style={styles.noDataText}>No hay equipos registrados.</Text>
+        ) : (
+          <FlatList
+            data={equipos}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => index.toString()}
+            style={styles.list}
+          />
+        )}
       </View>
     </View>
   );
@@ -261,8 +266,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  noDataText: {
+    textAlign: 'center',
+    color: 'gray',
+    marginVertical: 20,
+  },
 });
-
-
-
-
