@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView } from 'react-native';
 import Svg, { Polygon, Image as SvgImage } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import XLSX from 'xlsx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router'; // Importar useRouter
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const router = useRouter(); // Usar useRouter en lugar de useNavigation
   const [equipos, setEquipos] = useState<any[]>([]);
-  const [turnos, setTurnos] = useState<any[]>([]); // Estado para los datos de turnos
+  const [turnos, setTurnos] = useState<any[]>([]);
+
+  // Obtener las dimensiones de la pantalla
+  const { width } = Dimensions.get('window');
+  const isTablet = width >= 768; // Considerar como tablet si el ancho es mayor o igual a 768px
 
   // Cargar los equipos desde AsyncStorage
   const loadEquipos = async () => {
@@ -37,44 +41,32 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    loadEquipos(); // Cargar equipos al iniciar el componente
-    loadTurnos();  // Cargar turnos al iniciar el componente
+    loadEquipos();
+    loadTurnos();
   }, []);
 
   const exportToExcel = async () => {
     try {
-      // Crear una nueva hoja de trabajo para turnos y equipos
       const turnosWorksheet = XLSX.utils.json_to_sheet(turnos);
       const equiposWorksheet = XLSX.utils.json_to_sheet(equipos);
-      
-      // Crear un nuevo libro de trabajo
       const workbook = XLSX.utils.book_new();
       
-      // Agregar hojas al libro
       XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
       XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
 
-      // Generar el contenido del archivo Excel en formato binario
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-
-      // Convertir el contenido a un formato que pueda ser utilizado
       const data = new Uint8Array(excelBuffer.length);
       for (let i = 0; i < excelBuffer.length; i++) {
         data[i] = excelBuffer.charCodeAt(i) & 0xff;
       }
 
-      // Crear un URI para el archivo Excel
       const fileUri = `${FileSystem.documentDirectory}datos.xlsx`;
-
-      // Convertir el Uint8Array a base64
       const base64Data = btoa(String.fromCharCode(...data));
 
-      // Escribir el archivo en el sistema de archivos
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Compartir el archivo
       await Sharing.shareAsync(fileUri);
     } catch (error) {
       console.error("Error exporting to Excel", error);
@@ -82,52 +74,61 @@ export default function HomeScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('userName'); // Borra el AsyncStorage
+      router.push('auth/login'); // Redirige a la pantalla de login usando router
+    } catch (error) {
+      console.error('Error al borrar AsyncStorage:', error);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Home</Text>
 
-      <Svg height="300" width="300" style={styles.hexagon}>
+      <Svg height={isTablet ? 400 : 300} width={isTablet ? 400 : 300} style={styles.hexagon}>
         <Polygon
           points="150,0 300,75 300,225 150,300 0,225 0,75"
           fill="#F0A500"
         />
         <SvgImage
-          href={require('@/assets/images/minetrack.png')} // Asegúrate de que esta ruta sea correcta
-          x="50" // Ajusta la posición de la imagen dentro del hexágono
-          y="25" // Ajusta la posición de la imagen dentro del hexágono
-          width="200" // Ajusta el tamaño de la imagen
-          height="200" // Ajusta el tamaño de la imagen
+          href={require('@/assets/images/minetrack.png')}
+          x={isTablet ? 75 : 50}
+          y={isTablet ? 50 : 25}
+          width={isTablet ? 250 : 200}
+          height={isTablet ? 250 : 200}
           preserveAspectRatio="xMidYMid slice"
         />
       </Svg>
 
-      <Text style={styles.header}>Gestión de Datos</Text>
-
-      <View style={styles.cardContainer}>
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Turnos')}>
+      <View style={styles.gridContainer}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push('../Turnos')}>
           <Text style={styles.cardText}>Turnos</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Equipos')}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push('../Equipos')}>
           <Text style={styles.cardText}>Equipos</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.exportButton} onPress={exportToExcel}>
-        <Text style={styles.exportButtonText}>Exportar a XLSX</Text>
-      </TouchableOpacity>
+          <Text style={styles.exportButtonText}>Exportar a XLSX</Text>
+        </TouchableOpacity>
       </View>
-      
-      {/* Asegúrate de que el botón de exportar está aquí */}
-      
-      
-    </View>
+
+      {/* Aumentar separación del botón de salida */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Salir</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#4E4E4E',
     alignItems: 'center',
     paddingTop: 40,
+    paddingHorizontal: 20,
   },
   hexagon: {
     marginVertical: 20,
@@ -137,22 +138,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginVertical: 20,
+    textAlign: 'center',
   },
-  cardContainer: {
+  gridContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     width: '100%',
     marginVertical: 50,
-    flexWrap: 'wrap', // Permite que los botones se envuelvan en pantallas pequeñas
   },
   card: {
     backgroundColor: '#F0A500',
-    width: '40%', // Cambiado para ser más responsivo
+    width: '48%', // Ajustar ancho para dos columnas
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    margin: 10,
+    marginBottom: 20,
   },
   cardText: {
     fontSize: 30,
@@ -160,16 +162,33 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   exportButton: {
-    backgroundColor: '#007BFF', // Color del botón de exportar
+    backgroundColor: '#007BFF',
     padding: 15,
     borderRadius: 5,
     marginTop: 20,
     alignItems: 'center',
-    width: '80%', // Ampliar el ancho del botón de exportar
+    width: '100%', // Exportar ocupa el ancho completo
+    marginBottom: 40, // Aumentar separación de "Exportar"
   },
   exportButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
+  logoutButton: {
+    backgroundColor: 'red',
+    padding: 15,
+    borderRadius: 5,
+    marginTop: 20,
+    alignItems: 'center',
+    width: '80%',
+    position: 'absolute',
+    bottom: 20,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
+
