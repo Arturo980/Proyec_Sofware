@@ -152,8 +152,8 @@ export default function TurnosScreen() {
       <Text style={styles.cell}>{item.estatusFinal}</Text>
       <Text style={styles.cell}>{item.estatusReal}</Text>
       <Text style={styles.cell}>{item.observacion}</Text>
-      <TouchableOpacity style={styles.menuButton} onPress={() => { setSelectedIndex(index); setModalVisible(true); }}>
-        <Text style={styles.menuText}>Opciones</Text>
+      <TouchableOpacity style={styles.grayButton} onPress={() => { setSelectedIndex(index); setModalVisible(true); }}>
+        <Text style={styles.buttongtext}>Opciones</Text>
       </TouchableOpacity>
     </View>
   );
@@ -184,7 +184,6 @@ export default function TurnosScreen() {
       )}
 
       <View style={styles.tableContainer}>
-        <Text style={styles.tableHeader}>Tabla de Turnos</Text>
         <View style={styles.headerRow}>
           <Text style={styles.headerCell}>Fecha</Text>
           <Text style={styles.headerCell}>Turno Saliente</Text>
@@ -221,29 +220,30 @@ export default function TurnosScreen() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>Opciones</Text>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => handleEditTurno(selectedIndex)}
-            >
-              <Text style={styles.modalButtonText}>Actualizar Turno</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => handleDeleteTurno(selectedIndex)}
-            >
-              <Text style={styles.modalButtonText}>Eliminar Turno</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+       <View style={styles.modalContainer}>
+  <View style={styles.modalView}>
+    <Text style={styles.modalText} >Opciones</Text>
+    <TouchableOpacity
+      style={[styles.modalButton, styles.updateButton]}
+      onPress={() => handleEditTurno(selectedIndex)}
+      
+    >
+      <Text style={styles.modalButtonText}>Actualizar Turno</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      style={[styles.modalButton, styles.deleteButton]}
+      onPress={() => handleDeleteTurno(selectedIndex)}
+    >
+      <Text style={styles.modalButtonText}>Eliminar Turno</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      style={[styles.modalButton, styles.cancelButton]}
+      onPress={() => setModalVisible(false)}
+    >
+      <Text style={styles.modalButtonText}>Cancelar</Text>
+    </TouchableOpacity>
+  </View>
+</View>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -253,47 +253,58 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#4E4E4E',
+    padding: 20,
   },
-  button: {
-    backgroundColor: '#007BFF',
-    padding: 10,
-    marginVertical: 10,
-    marginHorizontal: 20,
+  grayButton: {
+    backgroundColor: '#A9A9A9',
+    padding: 5,
     borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+    marginRight: 5,
   },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-  },
-  deleteAllButton: {
-    backgroundColor: '#FF5733',
-    padding: 10,
-    marginVertical: 10,
-    marginHorizontal: 20,
-    borderRadius: 5,
-  },
-  formContainer: {
-    marginVertical: 10,
-    paddingHorizontal: 20,
-  },
-  input: {
-    borderWidth: 1,
-    backgroundColor: '#ffff',
-    borderColor: '#ccc',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 5,
-    fontSize: 16,
+  buttongtext: {
+    color: 'white',
+    fontSize: 12,
     fontWeight: 'bold',
   },
-  tableContainer: {
-    marginVertical: 10,
-    marginHorizontal: 20,
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#fff',
+  },
+  input: {
+    width: '100%',
+    padding: 15,
     backgroundColor: '#fff',
-    borderRadius: 5,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  formContainer: {
+    marginBottom: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#fff',
+  },
+  cell: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  tableContainer: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 0,
+    marginTop: 20,
   },
   tableHeader: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
@@ -301,34 +312,55 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingBottom: 5,
-    borderBottomWidth: 1,
+    paddingVertical: 10,
+    borderBottomWidth: 2,
     borderBottomColor: '#000',
+    backgroundColor: '#fff',
   },
   headerCell: {
     flex: 1,
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  cell: {
-    flex: 1,
-    paddingVertical: 5,
-    borderRightWidth: 1,
-    textAlign: 'center',
+  button: {
+    backgroundColor: '#F0A500',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  menuButton: {
-    backgroundColor: '#6c757d',
-    padding: 5,
+  deleteAllButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10, // Increase padding to make the button larger
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    padding: 10,
     borderRadius: 5,
-    marginLeft: 10,
+    alignItems: 'center',
+    marginHorizontal: 5,
   },
-  menuText: {
-    color: '#fff',
+  optionsButton: {
+    backgroundColor: '#A9A9A9',
+  },
+  actionText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   noDataText: {
     textAlign: 'center',
+    color: 'gray',
     marginVertical: 20,
-    color: '#fff',
   },
   modalContainer: {
     flex: 1,
@@ -342,35 +374,31 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
-    elevation: 5,
   },
   modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
   modalButton: {
-    backgroundColor: '#007BFF',
     padding: 10,
-    marginVertical: 5,
     borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 5,
     width: '100%',
   },
+  updateButton: {
+    backgroundColor: '#1E90FF',
+  },
+  deleteButton: {
+    backgroundColor: '#FF6B6B',
+    borderRadius: 10
+  },
+  cancelButton: {
+    backgroundColor: '#A9A9A9',
+  },
   modalButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#fff',
-    alignItems: 'center',
-  },
-  list: {
-    marginVertical: 10,
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
