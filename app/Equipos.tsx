@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EquiposScreen() {
@@ -26,7 +26,7 @@ export default function EquiposScreen() {
       try {
         const NombreRegistrante = await AsyncStorage.getItem('userName');
         if (NombreRegistrante != null) {
-          setEquipoData(prevState => ({ ...prevState, NombreRegistrante}));
+          setEquipoData(prevState => ({ ...prevState, NombreRegistrante }));
         }
       } catch (e) {
         console.error("Error loading userName", e);
@@ -60,10 +60,7 @@ export default function EquiposScreen() {
   }, []);
 
   const handleAddEquipo = () => {
-    const newEquipo = {
-      ...equipoData,
-    };
-
+    const newEquipo = { ...equipoData };
     const updatedEquipos = [...equipos, newEquipo];
     setEquipos(updatedEquipos);
     saveEquipos(updatedEquipos);
@@ -73,7 +70,7 @@ export default function EquiposScreen() {
 
   const handleUpdateEquipo = () => {
     const updatedEquipos = equipos.map((equipo, index) => 
-      index === updateIndex ? { ...equipoData } : equipo
+      index === updateIndex ? equipoData : equipo
     );
     setEquipos(updatedEquipos);
     saveEquipos(updatedEquipos);
@@ -92,6 +89,7 @@ export default function EquiposScreen() {
       estado: '',
       porcentajePetroleo: '',
       observacion: '',
+      NombreRegistrante: '',
     });
   };
 
@@ -100,10 +98,7 @@ export default function EquiposScreen() {
       'Eliminar Equipo',
       '¿Estás seguro de que deseas eliminar este equipo?',
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
           onPress: () => {
@@ -122,10 +117,7 @@ export default function EquiposScreen() {
       'Eliminar Todos los Equipos',
       '¿Estás seguro de que deseas eliminar todos los equipos?',
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar Todos',
           onPress: () => {
@@ -150,6 +142,73 @@ export default function EquiposScreen() {
     setModalVisible(true);
   };
 
+  const renderHeader = () => (
+    <>
+      <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
+        <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Equipo"}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.button, styles.deleteAllButton]} onPress={handleDeleteAllEquipos}>
+        <Text style={styles.buttonText}>Eliminar Todos los Equipos</Text>
+      </TouchableOpacity>
+      {showForm && (
+        <View style={styles.formContainer}>
+          <TextInput
+            placeholder="Equipo"
+            style={styles.input}
+            value={equipoData.equipo}
+            onChangeText={(text) => setEquipoData({ ...equipoData, equipo: text })}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            placeholder="Marca"
+            style={styles.input}
+            value={equipoData.marca}
+            onChangeText={(text) => setEquipoData({ ...equipoData, marca: text })}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            placeholder="Número Interno"
+            style={styles.input}
+            value={equipoData.numeroInterno}
+            onChangeText={(text) => setEquipoData({ ...equipoData, numeroInterno: text })}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            placeholder="Operador"
+            style={styles.input}
+            value={equipoData.operador}
+            onChangeText={(text) => setEquipoData({ ...equipoData, operador: text })}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            placeholder="Estado"
+            style={styles.input}
+            value={equipoData.estado}
+            onChangeText={(text) => setEquipoData({ ...equipoData, estado: text })}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            placeholder="% Petróleo"
+            style={styles.input}
+            value={equipoData.porcentajePetroleo}
+            onChangeText={(text) => setEquipoData({ ...equipoData, porcentajePetroleo: text })}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            placeholder="Observación"
+            style={styles.input}
+            value={equipoData.observacion}
+            onChangeText={(text) => setEquipoData({ ...equipoData, observacion: text })}
+            placeholderTextColor="#888"
+          />
+          <TouchableOpacity style={styles.button} onPress={isUpdating ? handleUpdateEquipo : handleAddEquipo}>
+            <Text style={styles.buttonText}>{isUpdating ? "Actualizar Equipo" : "Agregar Equipo"}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </>
+  );
+
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
       <Text style={styles.cell}>{item.equipo}</Text>
@@ -167,68 +226,9 @@ export default function EquiposScreen() {
     </View>
   );
 
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
-        <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Equipo"}</Text>
-      </TouchableOpacity>
-      
-      {showForm && (
-        <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Equipo"
-            style={styles.input}
-            value={equipoData.equipo}
-            onChangeText={(text) => setEquipoData({ ...equipoData, equipo: text })}
-          />
-          <TextInput
-            placeholder="Marca"
-            style={styles.input}
-            value={equipoData.marca}
-            onChangeText={(text) => setEquipoData({ ...equipoData, marca: text })}
-          />
-          <TextInput
-            placeholder="Número Interno"
-            style={styles.input}
-            value={equipoData.numeroInterno}
-            onChangeText={(text) => setEquipoData({ ...equipoData, numeroInterno: text })}
-          />
-          <TextInput
-            placeholder="Operador"
-            style={styles.input}
-            value={equipoData.operador}
-            onChangeText={(text) => setEquipoData({ ...equipoData, operador: text })}
-          />
-          <TextInput
-            placeholder="Estado"
-            style={styles.input}
-            value={equipoData.estado}
-            onChangeText={(text) => setEquipoData({ ...equipoData, estado: text })}
-          />
-          <TextInput
-            placeholder="% Petróleo"
-            style={styles.input}
-            value={equipoData.porcentajePetroleo}
-            onChangeText={(text) => setEquipoData({ ...equipoData, porcentajePetroleo: text })}
-          />
-          <TextInput
-            placeholder="Observación"
-            style={styles.input}
-            value={equipoData.observacion}
-            onChangeText={(text) => setEquipoData({ ...equipoData, observacion: text })}
-          />
-          <TouchableOpacity style={styles.button} onPress={isUpdating ? handleUpdateEquipo : handleAddEquipo}>
-            <Text style={styles.buttonText}>{isUpdating ? "Actualizar Equipo" : "Agregar Equipo"}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <TouchableOpacity style={[styles.button, styles.deleteAllButton]} onPress={handleDeleteAllEquipos}>
-        <Text style={styles.buttonText}>Eliminar Todos los Equipos</Text>
-      </TouchableOpacity>
-
-      <View style={styles.tableContainer}>
-        <Text style={styles.tableHeader}>Tabla de Equipos</Text>
+  const renderSectionHeader = ({ section: { title } }) => {
+    if (title === 'Equipos') {
+      return (
         <View style={styles.headerRow}>
           <Text style={styles.headerCell}>Equipo</Text>
           <Text style={styles.headerCell}>Marca</Text>
@@ -237,21 +237,28 @@ export default function EquiposScreen() {
           <Text style={styles.headerCell}>Estado</Text>
           <Text style={styles.headerCell}>% Petróleo</Text>
           <Text style={styles.headerCell}>Observación</Text>
-          <Text style={styles.headerCell}>Acción</Text>
+          <Text style={styles.headerCell}>Acciones</Text>
         </View>
-        
-        {equipos.length === 0 ? (
-          <Text style={styles.noDataText}>No hay equipos registrados.</Text>
-        ) : (
-          <FlatList
-            data={equipos}
-            renderItem={renderItem}
-            keyExtractor={(item, index) => index.toString()}
-            style={styles.list}
-          />
-        )}
-      </View>
+      );
+    }
+    return null;
+  };
 
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <SectionList
+        sections={[
+          { title: 'Formulario', data: [{}], renderItem: renderHeader },
+          { title: 'Equipos', data: equipos, renderItem: renderItem }
+        ]}
+        keyExtractor={(item, index) => index.toString()}
+        ListEmptyComponent={<Text style={styles.noDataText}>No hay equipos registrados.</Text>}
+        renderSectionHeader={renderSectionHeader}
+        style={styles.list}
+      />
       <Modal
         animationType="slide"
         transparent={true}
@@ -288,7 +295,7 @@ export default function EquiposScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -320,6 +327,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+    backgroundColor: '#fff',
   },
   cell: {
     flex: 1,
@@ -343,6 +351,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 2,
     borderBottomColor: '#000',
+    backgroundColor: '#fff',
   },
   headerCell: {
     flex: 1,
