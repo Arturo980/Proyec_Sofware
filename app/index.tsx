@@ -1,25 +1,20 @@
-// app/index.tsx
-import React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 
 export default function MainScreen() {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
 
-  return (
-    <View style={styles.container}>
-      <Button title="Go to Login" onPress={() => router.push('./auth/login')} />
-      <Button title="Go to Home" onPress={() => router.push('./home')} />
-      <Button title="Go to Profile" onPress={() => router.push('./profile')} />
-      <Button title="Go to Recurso" onPress={() => router.push('./resource')} />
-    </View>
-  );
+  useEffect(() => {
+    // Espera hasta que el componente esté completamente montado
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      router.replace('./auth/login');
+    }
+  }, [isMounted, router]);
+
+  return null;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-  },
-});
