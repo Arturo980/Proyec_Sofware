@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EquiposScreen() {
@@ -16,6 +16,11 @@ export default function EquiposScreen() {
 
   const [equipos, setEquipos] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateIndex, setUpdateIndex] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
   useEffect(() => {
     const loadUserName = async () => {
       try {
@@ -29,7 +34,7 @@ export default function EquiposScreen() {
     };
     loadUserName();
   }, []);
-  // Cargar los equipos desde AsyncStorage
+
   const loadEquipos = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('equipos');
@@ -41,7 +46,6 @@ export default function EquiposScreen() {
     }
   };
 
-  // Guardar equipos en AsyncStorage
   const saveEquipos = async (newEquipos) => {
     try {
       const jsonValue = JSON.stringify(newEquipos);
@@ -52,7 +56,7 @@ export default function EquiposScreen() {
   };
 
   useEffect(() => {
-    loadEquipos(); // Cargar equipos al iniciar el componente
+    loadEquipos();
   }, []);
 
   const handleAddEquipo = () => {
@@ -62,9 +66,21 @@ export default function EquiposScreen() {
 
     const updatedEquipos = [...equipos, newEquipo];
     setEquipos(updatedEquipos);
-    saveEquipos(updatedEquipos); // Guardar equipos actualizados
-    setShowForm(false); // Ocultar el formulario
-    resetForm(); // Resetear el formulario
+    saveEquipos(updatedEquipos);
+    setShowForm(false);
+    resetForm();
+  };
+
+  const handleUpdateEquipo = () => {
+    const updatedEquipos = equipos.map((equipo, index) => 
+      index === updateIndex ? { ...equipoData } : equipo
+    );
+    setEquipos(updatedEquipos);
+    saveEquipos(updatedEquipos);
+    setShowForm(false);
+    resetForm();
+    setIsUpdating(false);
+    setUpdateIndex(null);
   };
 
   const resetForm = () => {
@@ -93,12 +109,45 @@ export default function EquiposScreen() {
           onPress: () => {
             const updatedEquipos = equipos.filter((_, i) => i !== index);
             setEquipos(updatedEquipos);
-            saveEquipos(updatedEquipos); // Guardar equipos actualizados
+            saveEquipos(updatedEquipos);
           },
         },
       ],
       { cancelable: true }
     );
+  };
+
+  const handleDeleteAllEquipos = () => {
+    Alert.alert(
+      'Eliminar Todos los Equipos',
+      '¿Estás seguro de que deseas eliminar todos los equipos?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Eliminar Todos',
+          onPress: () => {
+            setEquipos([]);
+            saveEquipos([]);
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleEditEquipo = (index) => {
+    setEquipoData(equipos[index]);
+    setShowForm(true);
+    setIsUpdating(true);
+    setUpdateIndex(index);
+  };
+
+  const openModal = (index) => {
+    setSelectedIndex(index);
+    setModalVisible(true);
   };
 
   const renderItem = ({ item, index }) => (
@@ -110,9 +159,11 @@ export default function EquiposScreen() {
       <Text style={styles.cell}>{item.estado}</Text>
       <Text style={styles.cell}>{item.porcentajePetroleo}</Text>
       <Text style={styles.cell}>{item.observacion}</Text>
-      <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteEquipo(index)}>
-        <Text style={styles.actionText}>Eliminar</Text>
-      </TouchableOpacity>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity style={[styles.actionButton, styles.optionsButton]} onPress={() => openModal(index)}>
+          <Text style={styles.actionText}>Opciones</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -166,11 +217,15 @@ export default function EquiposScreen() {
             value={equipoData.observacion}
             onChangeText={(text) => setEquipoData({ ...equipoData, observacion: text })}
           />
-          <TouchableOpacity style={styles.button} onPress={handleAddEquipo}>
-            <Text style={styles.buttonText}>Agregar Equipo</Text>
+          <TouchableOpacity style={styles.button} onPress={isUpdating ? handleUpdateEquipo : handleAddEquipo}>
+            <Text style={styles.buttonText}>{isUpdating ? "Actualizar Equipo" : "Agregar Equipo"}</Text>
           </TouchableOpacity>
         </View>
       )}
+
+      <TouchableOpacity style={[styles.button, styles.deleteAllButton]} onPress={handleDeleteAllEquipos}>
+        <Text style={styles.buttonText}>Eliminar Todos los Equipos</Text>
+      </TouchableOpacity>
 
       <View style={styles.tableContainer}>
         <Text style={styles.tableHeader}>Tabla de Equipos</Text>
@@ -185,7 +240,7 @@ export default function EquiposScreen() {
           <Text style={styles.headerCell}>Acción</Text>
         </View>
         
-        {equipos.length === 0 ? ( // Verificación de equipos
+        {equipos.length === 0 ? (
           <Text style={styles.noDataText}>No hay equipos registrados.</Text>
         ) : (
           <FlatList
@@ -196,6 +251,43 @@ export default function EquiposScreen() {
           />
         )}
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Opciones</Text>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.updateButton]}
+              onPress={() => {
+                handleEditEquipo(selectedIndex);
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.modalButtonText}>Actualizar Equipo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={() => {
+                handleDeleteEquipo(selectedIndex);
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.modalButtonText}>Eliminar Equipo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -234,7 +326,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tableContainer: {
-    backgroundColor: '#fff', // Color de fondo de la tabla
+    backgroundColor: '#fff',
     padding: 10,
     borderRadius: 10,
     marginTop: 20,
@@ -258,22 +350,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#F0A500', // Color amarillo para el botón
+    backgroundColor: '#F0A500',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 10,
+  },
+  deleteAllButton: {
+    backgroundColor: '#FF6B6B',
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },
+  actionButtons: {
+    flexDirection: 'row',
+  },
   actionButton: {
-    backgroundColor: '#FF6B6B', // Color para el botón de eliminar
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  optionsButton: {
+    backgroundColor: '#A9A9A9',
   },
   actionText: {
     color: 'white',
@@ -283,5 +384,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'gray',
     marginVertical: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  modalButton: {
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 5,
+    width: '100%',
+  },
+  updateButton: {
+    backgroundColor: '#1E90FF',
+  },
+  deleteButton: {
+    backgroundColor: '#FF6B6B',
+  },
+  cancelButton: {
+    backgroundColor: '#A9A9A9',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
