@@ -11,11 +11,24 @@ export default function EquiposScreen() {
     estado: '',
     porcentajePetroleo: '',
     observacion: '',
+    NombreRegistrante: '',
   });
 
   const [equipos, setEquipos] = useState([]);
   const [showForm, setShowForm] = useState(false);
-
+  useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const NombreRegistrante = await AsyncStorage.getItem('userName');
+        if (NombreRegistrante != null) {
+          setEquipoData(prevState => ({ ...prevState, NombreRegistrante}));
+        }
+      } catch (e) {
+        console.error("Error loading userName", e);
+      }
+    };
+    loadUserName();
+  }, []);
   // Cargar los equipos desde AsyncStorage
   const loadEquipos = async () => {
     try {
