@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TurnosScreen() {
@@ -20,7 +20,6 @@ export default function TurnosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
 
-  // Cargar los turnos desde AsyncStorage al inicio
   useEffect(() => {
     const loadTurnos = async () => {
       try {
@@ -35,7 +34,6 @@ export default function TurnosScreen() {
     loadTurnos();
   }, []);
 
-  // Guardar los turnos automáticamente cuando cambian
   useEffect(() => {
     const saveTurnos = async () => {
       try {
@@ -144,8 +142,8 @@ export default function TurnosScreen() {
     </View>
   );
 
-  return (
-    <View style={styles.container}>
+  const renderHeader = () => (
+    <View>
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
@@ -182,18 +180,23 @@ export default function TurnosScreen() {
           <Text style={styles.headerCell}>Observación</Text>
           <Text style={styles.headerCell}>Acción</Text>
         </View>
-
-        {turnos.length === 0 ? (
-          <Text style={styles.noDataText}>No hay turnos registrados.</Text>
-        ) : (
-          <FlatList
-            data={turnos}
-            renderItem={renderItem}
-            keyExtractor={(item, index) => index.toString()}
-            style={styles.list}
-          />
-        )}
       </View>
+    </View>
+  );
+
+  return (
+    <KeyboardAvoidingView style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={100}
+    >
+      <FlatList
+        data={turnos}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={<Text style={styles.noDataText}>No hay turnos registrados.</Text>}
+        style={styles.list}
+      />
 
       <Modal
         animationType="slide"
@@ -225,7 +228,7 @@ export default function TurnosScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -266,7 +269,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: '#fff',
     borderRadius: 5,
-    
   },
   tableHeader: {
     fontSize: 20,
@@ -279,7 +281,6 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    
   },
   headerCell: {
     flex: 1,
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
   cell: {
     flex: 1,
     paddingVertical: 5,
-    borderRightWidth:  2,
+    borderRightWidth: 2,
   },
   menuButton: {
     backgroundColor: '#6c757d',
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
   },
   menuText: {
     color: '#fff',
-    borderRightWidth:  2,
+    borderRightWidth: 2,
   },
   noDataText: {
     textAlign: 'center',
@@ -330,7 +331,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
-    
   },
   modalButton: {
     backgroundColor: '#007BFF',
@@ -349,19 +349,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-    
+    backgroundColor: '#fff',
   },
   list: {
     marginVertical: 10,
-    
   },
 });
-
-
-
-
-
-
-
-
-
