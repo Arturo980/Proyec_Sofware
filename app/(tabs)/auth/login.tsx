@@ -1,69 +1,73 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function LoginScreen() {
   const [name, setName] = useState('');
   const router = useRouter();
 
+  useFocusEffect(
+    useCallback(() => {
+      setName(''); // Restablece el estado del nombre cuando la pantalla se enfoca
+    }, [])
+  );
+
   const handleLogin = async () => {
-    // Verifica si el nombre tiene al menos 3 caracteres
     if (name.length < 3) {
       Alert.alert('Error', 'Error Campo vacío');
-      return; // Evita continuar si el nombre es inválido
+      return;
     }
 
     try {
-      // Guarda el nombre en AsyncStorage
       await AsyncStorage.setItem('userName', name);
       console.log('Login successful');
-      router.push('/home'); // Navega a la pantalla principal después del login
+      router.push('/home');
     } catch (error) {
       console.error('Error saving name to AsyncStorage:', error);
     }
   };
 
   return (
-    <View style={styles.container}>
-      {/* Logo */}
-      <Image source={require('@/assets/images/minetrack.png')} style={styles.logo} />
-
-      {/* Título */}
-      <Text style={styles.subtitle}>Ingrese su nombre</Text>
-
-      {/* Campo de Nombre */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Tu nombre"
-          value={name}
-          onChangeText={setName}
-          onSubmitEditing={handleLogin} // Redirige al presionar Enter
-          returnKeyType="done" // Cambia el tipo de botón de retorno
-        />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.inner}>
+        <Image source={require('@/assets/images/minetrack.png')} style={styles.logo} />
+        <Text style={styles.subtitle}>Ingrese su nombre</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Tu nombre"
+            value={name}
+            onChangeText={setName}
+            onSubmitEditing={handleLogin}
+            returnKeyType="done"
+          />
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Siguiente</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Botón de inicio de sesión (opcional) */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Siguiente</Text>
-      </TouchableOpacity>
-
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  inner: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#4E4E4E',  // Fondo gris similar
+    backgroundColor: '#4E4E4E',
     paddingHorizontal: 16,
   },
   logo: {
-    width: 250,  // Ajusta el tamaño del logo
+    width: 250,
     height: 250,
     marginBottom: 20,
   },
@@ -84,7 +88,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   button: {
-    backgroundColor: '#F0A500',  // Botón amarillo
+    backgroundColor: '#F0A500',
     padding: 12,
     borderRadius: 8,
     width: '100%',
