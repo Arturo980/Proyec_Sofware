@@ -47,32 +47,34 @@ export default function HomeScreen() {
 
   const exportToExcel = async () => {
     try {
-      const turnosWorksheet = XLSX.utils.json_to_sheet(turnos);
-      const equiposWorksheet = XLSX.utils.json_to_sheet(equipos);
-      const workbook = XLSX.utils.book_new();
-      
-      XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
-      XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
+        // Cargar los datos directamente sin actualizar el estado
+        const equiposValue = await AsyncStorage.getItem('equipos');
+        const turnosValue = await AsyncStorage.getItem('turnos');
 
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-      const data = new Uint8Array(excelBuffer.length);
-      for (let i = 0; i < excelBuffer.length; i++) {
-        data[i] = excelBuffer.charCodeAt(i) & 0xff;
-      }
+        // Analizar los datos JSON y verificar que no estén vacíos
+        const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
+        const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
 
-      const fileUri = `${FileSystem.documentDirectory}datos.xlsx`;
-      const base64Data = btoa(String.fromCharCode(...data));
+        // Crear las hojas de cálculo
+        const turnosWorksheet = XLSX.utils.json_to_sheet(turnosData);
+        const equiposWorksheet = XLSX.utils.json_to_sheet(equiposData);
+        const workbook = XLSX.utils.book_new();
 
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+        XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
+        XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
 
-      await Sharing.shareAsync(fileUri);
+        // Escribir el archivo XLSX
+        const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
+        const uri = FileSystem.documentDirectory + 'datos.xlsx';
+        await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
+
+        // Compartir el archivo
+        await Sharing.shareAsync(uri);
     } catch (error) {
-      console.error("Error exporting to Excel", error);
-      Alert.alert("Error", "No se pudo exportar a Excel.");
+        console.error("Error exporting to Excel", error);
+        Alert.alert("Error", "No se pudo exportar a Excel.");
     }
-  };
+};
 
   const handleLogout = async () => {
     try {
@@ -191,4 +193,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

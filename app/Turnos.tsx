@@ -11,6 +11,7 @@ export default function TurnosScreen() {
     estatusFinal: '',
     estatusReal: '',
     observacion: '',
+    NombreRegistrante: '',
   });
 
   const [turnos, setTurnos] = useState([]);
@@ -22,7 +23,19 @@ export default function TurnosScreen() {
   const { width } = Dimensions.get('window');
 
   const isTablet = width >= 768;  
-
+  useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const NombreRegistrante = await AsyncStorage.getItem('userName');
+        if (NombreRegistrante != null) {
+          setTurnoData(prevState => ({ ...prevState, NombreRegistrante}));
+        }
+      } catch (e) {
+        console.error("Error loading userName", e);
+      }
+    };
+    loadUserName();
+  }, []);
   useEffect(() => {
     const loadTurnos = async () => {
       try {
