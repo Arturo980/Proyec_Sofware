@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, SectionList } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TurnosScreen() {
@@ -19,6 +19,9 @@ export default function TurnosScreen() {
   const [editingIndex, setEditingIndex] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const { width } = Dimensions.get('window');
+
+  const isTablet = width >= 768;  
 
   useEffect(() => {
     const loadTurnos = async () => {
@@ -143,7 +146,7 @@ export default function TurnosScreen() {
   );
 
   const renderHeader = () => (
-    <View>
+    <>
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
@@ -154,13 +157,13 @@ export default function TurnosScreen() {
 
       {showForm && (
         <View style={styles.formContainer}>
-          <TextInput placeholder="Turno Saliente" style={styles.input} value={turnoData.turnoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, turnoSaliente: text })} />
-          <TextInput placeholder="Nombre Saliente" style={styles.input} value={turnoData.nombreSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, nombreSaliente: text })} />
-          <TextInput placeholder="Grupo Saliente" style={styles.input} value={turnoData.grupoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, grupoSaliente: text })} />
-          <TextInput placeholder="Postura" style={styles.input} value={turnoData.postura} onChangeText={(text) => setTurnoData({ ...turnoData, postura: text })} />
-          <TextInput placeholder="Estatus Final Reportado" style={styles.input} value={turnoData.estatusFinal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusFinal: text })} />
-          <TextInput placeholder="Estatus Real" style={styles.input} value={turnoData.estatusReal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusReal: text })} />
-          <TextInput placeholder="Observación" style={styles.input} value={turnoData.observacion} onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })} />
+          <TextInput placeholder="Turno Saliente" style={styles.input} placeholderTextColor="#888" value={turnoData.turnoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, turnoSaliente: text })} />
+          <TextInput placeholder="Nombre Saliente" style={styles.input} placeholderTextColor="#888" value={turnoData.nombreSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, nombreSaliente: text })} />
+          <TextInput placeholder="Grupo Saliente" style={styles.input} placeholderTextColor="#888" value={turnoData.grupoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, grupoSaliente: text })} />
+          <TextInput placeholder="Postura" style={styles.input} placeholderTextColor="#888" value={turnoData.postura} onChangeText={(text) => setTurnoData({ ...turnoData, postura: text })} />
+          <TextInput placeholder="Estatus Final Reportado" style={styles.input} placeholderTextColor="#888" value={turnoData.estatusFinal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusFinal: text })} />
+          <TextInput placeholder="Estatus Real" style={styles.input} placeholderTextColor="#888" value={turnoData.estatusReal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusReal: text })} />
+          <TextInput placeholder="Observación" style={styles.input} placeholderTextColor="#888" value={turnoData.observacion} onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })} />
           <TouchableOpacity style={styles.button} onPress={handleAddTurno}>
             <Text style={styles.buttonText}>{isEditing ? "Actualizar Turno" : "Agregar Turno"}</Text>
           </TouchableOpacity>
@@ -181,19 +184,20 @@ export default function TurnosScreen() {
           <Text style={styles.headerCell}>Acción</Text>
         </View>
       </View>
-    </View>
+    </>
   );
 
   return (
-    <KeyboardAvoidingView style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={100}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <FlatList
-        data={turnos}
-        renderItem={renderItem}
+      <SectionList
+        sections={[
+          { title: 'Formulario', data: [{}], renderItem: renderHeader },
+          { title: 'Turnos', data: turnos, renderItem: renderItem }
+        ]}
         keyExtractor={(item, index) => index.toString()}
-        ListHeaderComponent={renderHeader}
         ListEmptyComponent={<Text style={styles.noDataText}>No hay turnos registrados.</Text>}
         style={styles.list}
       />
@@ -235,13 +239,13 @@ export default function TurnosScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#4E4E4E',
   },
   button: {
     backgroundColor: '#007BFF',
     padding: 10,
     marginVertical: 10,
+    marginHorizontal: 20,
     borderRadius: 5,
   },
   buttonText: {
@@ -252,21 +256,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF5733',
     padding: 10,
     marginVertical: 10,
+    marginHorizontal: 20,
     borderRadius: 5,
   },
   formContainer: {
     marginVertical: 10,
+    paddingHorizontal: 20,
   },
   input: {
     borderWidth: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffff',
     borderColor: '#ccc',
     padding: 10,
     marginVertical: 5,
     borderRadius: 5,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   tableContainer: {
     marginVertical: 10,
+    marginHorizontal: 20,
     backgroundColor: '#fff',
     borderRadius: 5,
   },
@@ -274,6 +283,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
+    textAlign: 'center',
   },
   headerRow: {
     flexDirection: 'row',
@@ -285,11 +295,13 @@ const styles = StyleSheet.create({
   headerCell: {
     flex: 1,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   cell: {
     flex: 1,
     paddingVertical: 5,
-    borderRightWidth: 2,
+    borderRightWidth: 1,
+    textAlign: 'center',
   },
   menuButton: {
     backgroundColor: '#6c757d',
@@ -299,11 +311,11 @@ const styles = StyleSheet.create({
   },
   menuText: {
     color: '#fff',
-    borderRightWidth: 2,
   },
   noDataText: {
     textAlign: 'center',
     marginVertical: 20,
+    color: '#fff',
   },
   modalContainer: {
     flex: 1,
@@ -317,13 +329,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
     elevation: 5,
   },
   modalText: {
@@ -350,6 +355,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     backgroundColor: '#fff',
+    alignItems: 'center',
   },
   list: {
     marginVertical: 10,
