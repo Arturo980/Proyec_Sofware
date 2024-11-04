@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "MineTrack",
-    "slug": "MineTrack",
+    "slug": "Proyec_Sofware",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/react-logo@2x.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "bottomTabs": false,
