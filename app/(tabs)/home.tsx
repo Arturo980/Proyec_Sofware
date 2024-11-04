@@ -47,32 +47,36 @@ export default function HomeScreen() {
 
   const exportToExcel = async () => {
     try {
-        // Cargar los datos directamente sin actualizar el estado
         const equiposValue = await AsyncStorage.getItem('equipos');
         const turnosValue = await AsyncStorage.getItem('turnos');
 
-        // Analizar los datos JSON y verificar que no estén vacíos
         const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
         const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
 
-        // Crear las hojas de cálculo
         const turnosWorksheet = XLSX.utils.json_to_sheet(turnosData);
         const equiposWorksheet = XLSX.utils.json_to_sheet(equiposData);
         const workbook = XLSX.utils.book_new();
+        const userName = await AsyncStorage.getItem('userName');
+        if (!userName) {
+            throw new Error('No se encontró el nombre de usuario en AsyncStorage');
+        }
+
+        const currentDate = new Date();
+        const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
+        const fileName = `${formattedDate}_${userName}.xlsx`;
 
         XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
         XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
 
-        // Escribir el archivo XLSX
         const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
-        const uri = FileSystem.documentDirectory + 'datos.xlsx';
+        const uri = FileSystem.documentDirectory + fileName;
+
         await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
 
-        // Compartir el archivo
         await Sharing.shareAsync(uri);
     } catch (error) {
-        console.error("Error exporting to Excel", error);
-        Alert.alert("Error", "No se pudo exportar a Excel.");
+        console.error('Error exporting to Excel:', error);
+        alert(`Error exporting to Excel: ${error.message}`);
     }
 };
 
