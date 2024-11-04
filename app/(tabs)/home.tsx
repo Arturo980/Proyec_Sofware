@@ -16,6 +16,23 @@ export default function HomeScreen() {
   const { width } = Dimensions.get('window');
   const isTablet = width >= 768; // Considerar como tablet si el ancho es mayor o igual a 768px
 
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const name = await AsyncStorage.getItem('userName');
+        if (name) {
+          setUserName(name);
+        }
+      } catch (error) {
+        console.error('Error fetching userName from AsyncStorage', error);
+      }
+    };
+
+    fetchUserName();
+  }, []);
+
   // Cargar los equipos desde AsyncStorage
   const loadEquipos = async () => {
     try {
@@ -107,6 +124,10 @@ export default function HomeScreen() {
           preserveAspectRatio="xMidYMid slice"
         />
       </Svg>
+      <View style={styles.container}>
+      {/* Aquí va tu logo de Minetrack */}
+      <Text style={styles.welcomeText}>Bienvenido {userName}</Text>
+    </View>
 
       <View style={styles.gridContainer}>
         <TouchableOpacity style={styles.card} onPress={() => router.push('../Turnos')}>
@@ -136,6 +157,12 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingHorizontal: 20,
   },
+  welcomeText: {
+    color: '#fff',
+    fontSize: 30,
+    marginTop: 10,
+  },
+
   hexagon: {
     marginVertical: 20,
   },
