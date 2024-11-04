@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Proyec_Sofware",
-    "slug": "Proyec_Sofware",
+    "name": "MineTrack",
+    "slug": "MineTrack",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
