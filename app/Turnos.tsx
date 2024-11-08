@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, SectionList } from 'react-native';
+import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, SectionList, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TurnosScreen() {
@@ -12,17 +13,21 @@ export default function TurnosScreen() {
     estatusReal: '',
     observacion: '',
     NombreRegistrante: '',
+    photoUri: ''
   });
 
   const [turnos, setTurnos] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAdding, setIsAdding] = useState(true); // Estado para saber si estás agregando o actualizando
   const [editingIndex, setEditingIndex] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const { width } = Dimensions.get('window');
 
   const isTablet = width >= 768;  
+
   useEffect(() => {
     const loadUserName = async () => {
       try {
@@ -34,48 +39,52 @@ export default function TurnosScreen() {
         console.error("Error loading userName", e);
       }
     };
-    loadUserName();
-  }, []);
-  useEffect(() => {
+
     const loadTurnos = async () => {
       try {
-        const jsonValue = await AsyncStorage.getItem('turnos');
-        if (jsonValue != null) {
-          setTurnos(JSON.parse(jsonValue));
+        const storedTurnos = await AsyncStorage.getItem('turnos');
+        if (storedTurnos) {
+          setTurnos(JSON.parse(storedTurnos));
         }
       } catch (e) {
         console.error("Error loading turnos", e);
       }
     };
+
+    loadUserName();
     loadTurnos();
   }, []);
 
-  useEffect(() => {
-    const saveTurnos = async () => {
-      try {
-        const jsonValue = JSON.stringify(turnos);
-        await AsyncStorage.setItem('turnos', jsonValue);
-      } catch (e) {
-        console.error("Error saving turnos", e);
-      }
-    };
-    saveTurnos();
-  }, [turnos]);
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Se requiere permiso para acceder a la cámara.');
+      return;
+    }
 
-  const handleAddTurno = () => {
+    const result = await ImagePicker.launchCameraAsync();
+    if (!result.cancelled) {
+      setTurnoData(prevState => ({ ...prevState, photoUri: result.uri }));
+      Alert.alert('Foto Agregada', 'La foto se ha agregado correctamente.');
+    }
+  };
+
+  const handleAddTurno = async () => {
     const newTurno = {
       fecha: new Date().toLocaleDateString('es-ES'),
       ...turnoData,
     };
+    let updatedTurnos;
     if (isEditing) {
-      const updatedTurnos = [...turnos];
+      updatedTurnos = [...turnos];
       updatedTurnos[editingIndex] = newTurno;
-      setTurnos(updatedTurnos);
       setIsEditing(false);
       setEditingIndex(null);
     } else {
-      setTurnos([newTurno, ...turnos]); // Agrega el nuevo turno al principio del array
+      updatedTurnos = [newTurno, ...turnos];
     }
+    setTurnos(updatedTurnos);
+    await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
     setShowForm(false);
     resetForm();
   };
@@ -89,6 +98,8 @@ export default function TurnosScreen() {
       estatusFinal: '',
       estatusReal: '',
       observacion: '',
+      NombreRegistrante: '',
+      photoUri: '',
     });
   };
 
@@ -100,8 +111,10 @@ export default function TurnosScreen() {
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
-          onPress: () => {
-            setTurnos(turnos.filter((_, i) => i !== index));
+          onPress: async () => {
+            const updatedTurnos = turnos.filter((_, i) => i !== index);
+            setTurnos(updatedTurnos);
+            await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
             setModalVisible(false);
           },
         },
@@ -140,6 +153,11 @@ export default function TurnosScreen() {
     setModalVisible(false);
   };
 
+  const handleViewPhoto = (index) => {
+    setSelectedIndex(index);
+    setPhotoModalVisible(true);
+  };
+
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
       <Text style={styles.cell}>{item.fecha}</Text>
@@ -168,13 +186,22 @@ export default function TurnosScreen() {
 
       {showForm && (
         <View style={styles.formContainer}>
-          <TextInput placeholder="Turno Saliente" style={styles.input} placeholderTextColor="#888" value={turnoData.turnoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, turnoSaliente: text })} />
-          <TextInput placeholder="Nombre Saliente" style={styles.input} placeholderTextColor="#888" value={turnoData.nombreSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, nombreSaliente: text })} />
-          <TextInput placeholder="Grupo Saliente" style={styles.input} placeholderTextColor="#888" value={turnoData.grupoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, grupoSaliente: text })} />
-          <TextInput placeholder="Postura" style={styles.input} placeholderTextColor="#888" value={turnoData.postura} onChangeText={(text) => setTurnoData({ ...turnoData, postura: text })} />
-          <TextInput placeholder="Estatus Final Reportado" style={styles.input} placeholderTextColor="#888" value={turnoData.estatusFinal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusFinal: text })} />
-          <TextInput placeholder="Estatus Real" style={styles.input} placeholderTextColor="#888" value={turnoData.estatusReal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusReal: text })} />
-          <TextInput placeholder="Observación" style={styles.input} placeholderTextColor="#888" value={turnoData.observacion} onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })} />
+          <TextInput placeholder="Turno Saliente" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.turnoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, turnoSaliente: text })} />
+          <TextInput placeholder="Nombre Saliente" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.nombreSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, nombreSaliente: text })} />
+          <TextInput placeholder="Grupo Saliente" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.grupoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, grupoSaliente: text })} />
+          <TextInput placeholder="Postura" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.postura} onChangeText={(text) => setTurnoData({ ...turnoData, postura: text })} />
+          <TextInput placeholder="Estatus Final Reportado" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.estatusFinal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusFinal: text })} />
+          <TextInput placeholder="Estatus Real" style={styles.input} editable={!isAdding || isEditing} placeholderTextColor="#888" value={turnoData.estatusReal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusReal: text })} />
+          <TextInput placeholder="Observación" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.observacion} onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })} />
+          <TouchableOpacity style={styles.button} onPress={takePhoto}>
+            <Text style={styles.buttonText}>Tomar Foto</Text>
+          </TouchableOpacity>
+          {turnoData.photoUri && (
+            <Image
+              source={{ uri: turnoData.photoUri }}
+              style={{ width: 100, height: 100 }}
+            />
+          )}
           <TouchableOpacity style={styles.button} onPress={handleAddTurno}>
             <Text style={styles.buttonText}>{isEditing ? "Actualizar Turno" : "Agregar Turno"}</Text>
           </TouchableOpacity>
@@ -218,30 +245,62 @@ export default function TurnosScreen() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-       <View style={styles.modalContainer}>
-  <View style={styles.modalView}>
-    <Text style={styles.modalText} >Opciones</Text>
-    <TouchableOpacity
-      style={[styles.modalButton, styles.updateButton]}
-      onPress={() => handleEditTurno(selectedIndex)}
-      
-    >
-      <Text style={styles.modalButtonText}>Actualizar Turno</Text>
-    </TouchableOpacity>
-    <TouchableOpacity
-      style={[styles.modalButton, styles.deleteButton]}
-      onPress={() => handleDeleteTurno(selectedIndex)}
-    >
-      <Text style={styles.modalButtonText}>Eliminar Turno</Text>
-    </TouchableOpacity>
-    <TouchableOpacity
-      style={[styles.modalButton, styles.cancelButton]}
-      onPress={() => setModalVisible(false)}
-    >
-      <Text style={styles.modalButtonText}>Cancelar</Text>
-    </TouchableOpacity>
-  </View>
-</View>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Opciones</Text>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.updateButton]}
+              onPress={() => handleEditTurno(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Actualizar Turno</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={() => handleDeleteTurno(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Eliminar Turno</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.viewButton]}
+              onPress={() => handleViewPhoto(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Ver Foto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={photoModalVisible}
+        onRequestClose={() => setPhotoModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Foto del Turno</Text>
+            {selectedIndex !== null && turnos[selectedIndex] && turnos[selectedIndex].photoUri ? (
+              <Image
+                source={{ uri: turnos[selectedIndex].photoUri }}
+                style={{ width: 300, height: 300 }}
+              />
+            ) : (
+              <Text style={styles.noDataText}>No hay foto disponible.</Text>
+            )}
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => setPhotoModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -394,6 +453,9 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#A9A9A9',
+  },
+  viewButton: {
+    backgroundColor: '#FFD700',
   },
   modalButtonText: {
     color: 'white',
