@@ -67,7 +67,6 @@ export default function TurnosScreen() {
       fecha: new Date().toLocaleDateString('es-ES'),
       ...turnoData,
     };
-
     if (isEditing) {
       const updatedTurnos = [...turnos];
       updatedTurnos[editingIndex] = newTurno;
@@ -75,9 +74,8 @@ export default function TurnosScreen() {
       setIsEditing(false);
       setEditingIndex(null);
     } else {
-      setTurnos([...turnos, newTurno]);
+      setTurnos([newTurno, ...turnos]); // Agrega el nuevo turno al principio del array
     }
-
     setShowForm(false);
     resetForm();
   };
