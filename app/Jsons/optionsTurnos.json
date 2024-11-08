@@ -1,0 +1,8 @@
+{
+    "turnoSaliente": ["A", "B", "C", "D"],
+    "nombreSaliente": ["Nombre1", "Nombre2", "Nombre3"],
+    "grupoSaliente": ["Grupo1", "Grupo2", "Grupo3"],
+    "postura": ["Postura1", "Postura2", "Postura3"],
+    "estatusFinal": ["Estatus1", "Estatus2", "Estatus3"],
+    "estatusReal": ["Real1", "Real2", "Real3"]
+  }

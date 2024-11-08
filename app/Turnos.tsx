@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, SectionList, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import optionsTurnos from './Jsons/optionsTurnos.json';
+import { Picker } from '@react-native-picker/picker';
 export default function TurnosScreen() {
   const [turnoData, setTurnoData] = useState({
     turnoSaliente: '',
@@ -24,10 +25,12 @@ export default function TurnosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [pickerVisible, setPickerVisible] = useState(false); // Define pickerVisible en el estado
   const { width } = Dimensions.get('window');
+  const [currentPickerField, setCurrentPickerField] = useState(null);
 
   const isTablet = width >= 768;  
-
+  
   useEffect(() => {
     const loadUserName = async () => {
       try {
@@ -70,6 +73,8 @@ export default function TurnosScreen() {
   };
 
   const handleAddTurno = async () => {
+    setIsAdding(true)
+    setIsEditing(false);
     const newTurno = {
       fecha: new Date().toLocaleDateString('es-ES'),
       ...turnoData,
@@ -151,12 +156,28 @@ export default function TurnosScreen() {
     setIsEditing(true);
     setEditingIndex(index);
     setModalVisible(false);
+    setIsAdding(false);
   };
 
   const handleViewPhoto = (index) => {
     setSelectedIndex(index);
     setPhotoModalVisible(true);
   };
+  const handlePickerOpen = (field) => {
+    setCurrentPickerField(field);
+    setPickerVisible(true);
+  };
+  const handleFieldFocus = (field) => {
+    setCurrentPickerField(field);
+    setPickerVisible(true);
+  };
+  
+  const handlePickerChange = (itemValue) => {
+    setTurnoData((prevData) => ({ ...prevData, [currentPickerField]: itemValue }));
+    setPickerVisible(false);
+  };
+
+ 
 
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
@@ -179,20 +200,105 @@ export default function TurnosScreen() {
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
-
+  
       <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
         <Text style={styles.buttonText}>Eliminar Todo</Text>
       </TouchableOpacity>
-
+  
       {showForm && (
         <View style={styles.formContainer}>
-          <TextInput placeholder="Turno Saliente" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.turnoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, turnoSaliente: text })} />
-          <TextInput placeholder="Nombre Saliente" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.nombreSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, nombreSaliente: text })} />
-          <TextInput placeholder="Grupo Saliente" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.grupoSaliente} onChangeText={(text) => setTurnoData({ ...turnoData, grupoSaliente: text })} />
-          <TextInput placeholder="Postura" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.postura} onChangeText={(text) => setTurnoData({ ...turnoData, postura: text })} />
-          <TextInput placeholder="Estatus Final Reportado" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.estatusFinal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusFinal: text })} />
-          <TextInput placeholder="Estatus Real" style={styles.input} editable={!isAdding || isEditing} placeholderTextColor="#888" value={turnoData.estatusReal} onChangeText={(text) => setTurnoData({ ...turnoData, estatusReal: text })} />
-          <TextInput placeholder="Observación" style={styles.input} editable={isAdding && !isEditing} placeholderTextColor="#888" value={turnoData.observacion} onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })} />
+          <TouchableOpacity onPress={() => handleFieldFocus('turnoSaliente')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.turnoSaliente || "Turno Saliente"}</Text>
+          </TouchableOpacity>
+          {pickerVisible && currentPickerField === 'turnoSaliente' && isAdding && (
+            <Picker
+              selectedValue={turnoData.turnoSaliente}
+              onValueChange={(itemValue) => handlePickerChange(itemValue, 'turnoSaliente')}
+            >
+              {optionsTurnos.turnoSaliente.map((option, index) => (
+                <Picker.Item key={index} label={option} value={option} />
+              ))}
+            </Picker>
+          )}
+  
+          <TouchableOpacity onPress={() => handleFieldFocus('nombreSaliente')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.nombreSaliente || "Nombre Saliente"}</Text>
+          </TouchableOpacity>
+          {pickerVisible && currentPickerField === 'nombreSaliente' && isAdding && (
+            <Picker
+              selectedValue={turnoData.nombreSaliente}
+              onValueChange={(itemValue) => handlePickerChange(itemValue, 'nombreSaliente')}
+            >
+              {optionsTurnos.nombreSaliente.map((option, index) => (
+                <Picker.Item key={index} label={option} value={option} />
+              ))}
+            </Picker>
+          )}
+  
+          <TouchableOpacity onPress={() => handleFieldFocus('grupoSaliente')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.grupoSaliente || "Grupo Saliente"}</Text>
+          </TouchableOpacity>
+          {pickerVisible && currentPickerField === 'grupoSaliente' && isAdding && (
+            <Picker
+              selectedValue={turnoData.grupoSaliente}
+              onValueChange={(itemValue) => handlePickerChange(itemValue, 'grupoSaliente')}
+            >
+              {optionsTurnos.grupoSaliente.map((option, index) => (
+                <Picker.Item key={index} label={option} value={option} />
+              ))}
+            </Picker>
+          )}
+  
+          <TouchableOpacity onPress={() => handleFieldFocus('postura')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.postura || "Postura"}</Text>
+          </TouchableOpacity>
+          {pickerVisible && currentPickerField === 'postura' && isAdding && (
+            <Picker
+              selectedValue={turnoData.postura}
+              onValueChange={(itemValue) => handlePickerChange(itemValue, 'postura')}
+            >
+              {optionsTurnos.postura.map((option, index) => (
+                <Picker.Item key={index} label={option} value={option} />
+              ))}
+            </Picker>
+          )}
+  
+          <TouchableOpacity onPress={() => handleFieldFocus('estatusFinal')}>
+            <Text style={styles.input} editable={!isAdding}>{turnoData.estatusFinal || "Estatus Final Reportado"}</Text>
+          </TouchableOpacity>
+          {pickerVisible && currentPickerField === 'estatusFinal' && isAdding && (
+            <Picker
+              selectedValue={turnoData.estatusFinal}
+              onValueChange={(itemValue) => handlePickerChange(itemValue, 'estatusFinal')}
+            >
+              {optionsTurnos.estatusFinal.map((option, index) => (
+                <Picker.Item key={index} label={option} value={option} />
+              ))}
+            </Picker>
+          )}
+  
+          <TouchableOpacity onPress={() => handleFieldFocus('estatusReal')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.estatusReal || "Selecciona Estatus Real"}</Text>
+          </TouchableOpacity>
+          {pickerVisible && currentPickerField === 'estatusReal' && isEditing && (
+            <Picker
+              selectedValue={turnoData.estatusReal}
+              onValueChange={(itemValue) => handlePickerChange(itemValue, 'estatusReal')}
+            >
+              {optionsTurnos.estatusReal.map((option, index) => (
+                <Picker.Item key={index} label={option} value={option} />
+              ))}
+            </Picker>
+          )}
+  
+          <TextInput
+            placeholder="Observación"
+            style={styles.input}
+            editable={isAdding}
+            placeholderTextColor="#888"
+            value={turnoData.observacion}
+            onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })}
+          />
           <TouchableOpacity style={styles.button} onPress={takePhoto}>
             <Text style={styles.buttonText}>Tomar Foto</Text>
           </TouchableOpacity>
@@ -207,7 +313,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
         </View>
       )}
-
+  
       <View style={styles.tableContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.headerCell}>Fecha</Text>
@@ -223,7 +329,8 @@ export default function TurnosScreen() {
       </View>
     </>
   );
-
+  
+  
   return (
     <KeyboardAvoidingView
       style={styles.container}
