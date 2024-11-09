@@ -1,30 +1,30 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { useRoute } from '@react-navigation/native'; // React Navigation's useRoute
+import { useRoute } from '@react-navigation/native';
 
 const PhotoViewerScreen = () => {
   const route = useRoute();
-  const { photoUri } = route.params || {};  // Access the photoUri passed in params
+  const { photoUris = "" } = route.params || {};  // Default to empty string if photoUris is undefined
 
-  console.log("Received params in PhotoViewerScreen:", route.params);  // Log the received params
+  console.log("Received params in PhotoViewerScreen:", route.params);
 
-  if (!photoUri) {
-    console.log("No photoUri found, displaying loading screen.");  // Log if photoUri is not found
+  // Split the photoUris string into an array if it's a string
+  const photoUrisArray = typeof photoUris === "string" ? photoUris.split(",") : photoUris;
+
+  if (!Array.isArray(photoUrisArray) || photoUrisArray.length === 0) {
+    console.log("No photos found, displaying loading screen.");
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#fff" />
+        <ActivityIndicator size="large" color="#00f" />
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
 
-  const images = [
-    {
-      url: photoUri,
-    },
-  ];
+  const images = photoUrisArray.map(uri => ({ url: uri.trim() }));
 
-  console.log("Displaying image with photoUri:", photoUri);  // Log the image URL to be displayed
+  console.log("Displaying images with photoUris:", photoUrisArray);
 
   return (
     <View style={styles.container}>
@@ -44,10 +44,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#000',
   },
+  loadingText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
+  },
 });
 
 export default PhotoViewerScreen;
-
-
-
 

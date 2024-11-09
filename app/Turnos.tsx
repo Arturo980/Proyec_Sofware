@@ -18,7 +18,7 @@ export default function TurnosScreen() {
     estatusReal: '',
     observacion: '',
     NombreRegistrante: '',
-    photoUri: ''
+    photoUri: [],  // Cambiado para manejar múltiples fotos
   });
   const [turnos, setTurnos] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -70,7 +70,7 @@ export default function TurnosScreen() {
       }
 
       const result = await ImagePicker.launchCameraAsync();
-      console.log('Result:', result); // Agrega este log para depurar
+      console.log('Result:', result); 
 
       if (result.cancelled) {
         alert('La toma de la foto fue cancelada.');
@@ -84,14 +84,19 @@ export default function TurnosScreen() {
 
       const fileName = result.assets[0].uri.split('/').pop();
       const fileUri = `${FileSystem.documentDirectory}${fileName}`;
-      console.log('File URI:', fileUri); // Agrega este log para depurar
+      console.log('File URI:', fileUri); 
 
       await FileSystem.moveAsync({
         from: result.assets[0].uri,
         to: fileUri,
       });
 
-      setTurnoData(prevState => ({ ...prevState, photoUri: fileUri }));
+      // Agregar la foto al array de photosUri
+      setTurnoData(prevState => ({
+        ...prevState,
+        photoUri: [...prevState.photoUri, fileUri], // Agregar una nueva foto
+      }));
+
       Alert.alert('Foto Agregada', 'La foto se ha agregado correctamente.');
     } catch (error) {
       console.error("Error taking photo", error);
@@ -131,8 +136,38 @@ export default function TurnosScreen() {
       estatusReal: '',
       observacion: '',
       NombreRegistrante: '',
-      photoUri: '',
+      photoUri: [],  // Resetear a arreglo vacío
     });
+  };
+
+  const handleViewPhoto = (index) => {
+    const turno = turnos[index];
+    if (turno && turno.photoUri && turno.photoUri.length > 0) {
+      console.log("Navigating to PhotoViewerScreen with photoUris:", turno.photoUri);  
+      router.push({
+        pathname: '/PhotoViewerScreen',
+        params: { photoUris: turno.photoUri },  // Pasar el arreglo de fotos
+      });
+    } else {
+      console.log("No photos found for turno:", turno);  
+      Alert.alert('No hay fotos disponibles', 'Por favor, toma una foto primero.');
+    }
+  };
+
+  
+  const handlePickerOpen = (field) => {
+    setCurrentPickerField(field);
+    setPickerVisible(true);
+  };
+
+  const handleFieldFocus = (field) => {
+    setCurrentPickerField(field);
+    setPickerVisible(true);
+  };
+
+  const handlePickerChange = (itemValue) => {
+    setTurnoData((prevData) => ({ ...prevData, [currentPickerField]: itemValue }));
+    setPickerVisible(false);
   };
 
   const handleDeleteTurno = (index) => {
@@ -154,7 +189,6 @@ export default function TurnosScreen() {
       { cancelable: true }
     );
   };
-
   const handleDeleteAll = async () => {
     Alert.alert(
       'Eliminar Todos los Turnos',
@@ -185,39 +219,6 @@ export default function TurnosScreen() {
     setModalVisible(false);
     setIsAdding(false);
   };
-
-  const handleViewPhoto = (index) => {
-    const turno = turnos[index];
-  
-    if (turno && turno.photoUri) {
-      console.log("Navigating to PhotoViewerScreen with photoUri:", turno.photoUri);  // Log the photoUri being passed
-      router.push({
-        pathname: '/PhotoViewerScreen',
-        params: { photoUri: turno.photoUri },  // Passing photoUri via params
-      });
-    } else {
-      console.log("No photoUri found for turno:", turno);  // Log if no photoUri exists
-      Alert.alert('No hay foto disponible', 'Por favor, toma una foto primero.');
-    }
-  };
-  
-  
-  
-  const handlePickerOpen = (field) => {
-    setCurrentPickerField(field);
-    setPickerVisible(true);
-  };
-
-  const handleFieldFocus = (field) => {
-    setCurrentPickerField(field);
-    setPickerVisible(true);
-  };
-
-  const handlePickerChange = (itemValue) => {
-    setTurnoData((prevData) => ({ ...prevData, [currentPickerField]: itemValue }));
-    setPickerVisible(false);
-  };
-
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
       <Text style={styles.cell}>{item.fecha}</Text>
@@ -341,12 +342,17 @@ export default function TurnosScreen() {
           <TouchableOpacity style={styles.button} onPress={takePhoto}>
             <Text style={styles.buttonText}>Tomar Foto</Text>
           </TouchableOpacity>
-          {turnoData.photoUri && (
-            <Image
-              source={{ uri: turnoData.photoUri }}
-              style={{ width: 100, height: 100 }}
-            />
-          )}
+          {turnoData.photoUri && turnoData.photoUri.length > 0 && (
+  turnoData.photoUri.map((uri, index) => (
+    <Image
+      key={index}
+      source={{ uri }}
+      style={{ width: 100, height: 100, marginBottom: 10 }}
+    />
+  ))
+)}
+
+
           <TouchableOpacity style={styles.button} onPress={handleAddTurno}>
             <Text style={styles.buttonText}>{isEditing ? "Actualizar Turno" : "Agregar Turno"}</Text>
           </TouchableOpacity>
