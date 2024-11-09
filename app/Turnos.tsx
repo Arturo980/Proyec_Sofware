@@ -4,6 +4,10 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import optionsTurnos from './Jsons/optionsTurnos.json';
 import { Picker } from '@react-native-picker/picker';
+import * as FileSystem from 'expo-file-system';
+import ImageViewer from 'react-native-image-zoom-viewer';
+import { useRouter } from 'expo-router';
+
 export default function TurnosScreen() {
   const [turnoData, setTurnoData] = useState({
     turnoSaliente: '',
@@ -16,27 +20,26 @@ export default function TurnosScreen() {
     NombreRegistrante: '',
     photoUri: ''
   });
-
   const [turnos, setTurnos] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isAdding, setIsAdding] = useState(true); // Estado para saber si estás agregando o actualizando
+  const [isAdding, setIsAdding] = useState(true);
   const [editingIndex, setEditingIndex] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const [pickerVisible, setPickerVisible] = useState(false); // Define pickerVisible en el estado
+  const [pickerVisible, setPickerVisible] = useState(false);
   const { width } = Dimensions.get('window');
   const [currentPickerField, setCurrentPickerField] = useState(null);
+  const router = useRouter();
+  const isTablet = width >= 768;
 
-  const isTablet = width >= 768;  
-  
   useEffect(() => {
     const loadUserName = async () => {
       try {
         const NombreRegistrante = await AsyncStorage.getItem('userName');
         if (NombreRegistrante != null) {
-          setTurnoData(prevState => ({ ...prevState, NombreRegistrante}));
+          setTurnoData(prevState => ({ ...prevState, NombreRegistrante }));
         }
       } catch (e) {
         console.error("Error loading userName", e);
@@ -59,16 +62,40 @@ export default function TurnosScreen() {
   }, []);
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Se requiere permiso para acceder a la cámara.');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Se requiere permiso para acceder a la cámara.');
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync();
-    if (!result.cancelled) {
-      setTurnoData(prevState => ({ ...prevState, photoUri: result.uri }));
+      const result = await ImagePicker.launchCameraAsync();
+      console.log('Result:', result); // Agrega este log para depurar
+
+      if (result.cancelled) {
+        alert('La toma de la foto fue cancelada.');
+        return;
+      }
+
+      if (!result.assets || !result.assets[0].uri) {
+        alert('No se pudo obtener la URI de la foto.');
+        return;
+      }
+
+      const fileName = result.assets[0].uri.split('/').pop();
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+      console.log('File URI:', fileUri); // Agrega este log para depurar
+
+      await FileSystem.moveAsync({
+        from: result.assets[0].uri,
+        to: fileUri,
+      });
+
+      setTurnoData(prevState => ({ ...prevState, photoUri: fileUri }));
       Alert.alert('Foto Agregada', 'La foto se ha agregado correctamente.');
+    } catch (error) {
+      console.error("Error taking photo", error);
+      Alert.alert('Error', 'Hubo un problema al tomar la foto.');
     }
   };
 
@@ -160,24 +187,36 @@ export default function TurnosScreen() {
   };
 
   const handleViewPhoto = (index) => {
-    setSelectedIndex(index);
-    setPhotoModalVisible(true);
+    const turno = turnos[index];
+  
+    if (turno && turno.photoUri) {
+      console.log("Navigating to PhotoViewerScreen with photoUri:", turno.photoUri);  // Log the photoUri being passed
+      router.push({
+        pathname: '/PhotoViewerScreen',
+        params: { photoUri: turno.photoUri },  // Passing photoUri via params
+      });
+    } else {
+      console.log("No photoUri found for turno:", turno);  // Log if no photoUri exists
+      Alert.alert('No hay foto disponible', 'Por favor, toma una foto primero.');
+    }
   };
+  
+  
+  
   const handlePickerOpen = (field) => {
     setCurrentPickerField(field);
     setPickerVisible(true);
   };
+
   const handleFieldFocus = (field) => {
     setCurrentPickerField(field);
     setPickerVisible(true);
   };
-  
+
   const handlePickerChange = (itemValue) => {
     setTurnoData((prevData) => ({ ...prevData, [currentPickerField]: itemValue }));
     setPickerVisible(false);
   };
-
- 
 
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
@@ -200,11 +239,11 @@ export default function TurnosScreen() {
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
-  
+
       <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
         <Text style={styles.buttonText}>Eliminar Todo</Text>
       </TouchableOpacity>
-  
+
       {showForm && (
         <View style={styles.formContainer}>
           <TouchableOpacity onPress={() => handleFieldFocus('turnoSaliente')}>
@@ -220,7 +259,7 @@ export default function TurnosScreen() {
               ))}
             </Picker>
           )}
-  
+
           <TouchableOpacity onPress={() => handleFieldFocus('nombreSaliente')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.nombreSaliente || "Nombre Saliente"}</Text>
           </TouchableOpacity>
@@ -234,7 +273,7 @@ export default function TurnosScreen() {
               ))}
             </Picker>
           )}
-  
+
           <TouchableOpacity onPress={() => handleFieldFocus('grupoSaliente')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.grupoSaliente || "Grupo Saliente"}</Text>
           </TouchableOpacity>
@@ -248,7 +287,7 @@ export default function TurnosScreen() {
               ))}
             </Picker>
           )}
-  
+
           <TouchableOpacity onPress={() => handleFieldFocus('postura')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.postura || "Postura"}</Text>
           </TouchableOpacity>
@@ -262,7 +301,7 @@ export default function TurnosScreen() {
               ))}
             </Picker>
           )}
-  
+
           <TouchableOpacity onPress={() => handleFieldFocus('estatusFinal')}>
             <Text style={styles.input} editable={!isAdding}>{turnoData.estatusFinal || "Estatus Final Reportado"}</Text>
           </TouchableOpacity>
@@ -276,7 +315,7 @@ export default function TurnosScreen() {
               ))}
             </Picker>
           )}
-  
+
           <TouchableOpacity onPress={() => handleFieldFocus('estatusReal')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.estatusReal || "Selecciona Estatus Real"}</Text>
           </TouchableOpacity>
@@ -290,7 +329,7 @@ export default function TurnosScreen() {
               ))}
             </Picker>
           )}
-  
+
           <TextInput
             placeholder="Observación"
             style={styles.input}
@@ -313,7 +352,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
         </View>
       )}
-  
+
       <View style={styles.tableContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.headerCell}>Fecha</Text>
@@ -329,8 +368,7 @@ export default function TurnosScreen() {
       </View>
     </>
   );
-  
-  
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -384,29 +422,16 @@ export default function TurnosScreen() {
       </Modal>
 
       <Modal
-        animationType="slide"
-        transparent={true}
         visible={photoModalVisible}
+        transparent={true}
         onRequestClose={() => setPhotoModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>Foto del Turno</Text>
-            {selectedIndex !== null && turnos[selectedIndex] && turnos[selectedIndex].photoUri ? (
-              <Image
-                source={{ uri: turnos[selectedIndex].photoUri }}
-                style={{ width: 300, height: 300 }}
-              />
-            ) : (
-              <Text style={styles.noDataText}>No hay foto disponible.</Text>
-            )}
-            <TouchableOpacity
-              style={[styles.modalButton, styles.cancelButton]}
-              onPress={() => setPhotoModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Cerrar</Text>
-            </TouchableOpacity>
-          </View>
+          <ImageViewer
+            imageUrls={[{ url: turnos[selectedIndex]?.photoUri }]}
+            enableSwipeDown={true}
+            onSwipeDown={() => setPhotoModalVisible(false)}
+          />
         </View>
       </Modal>
     </KeyboardAvoidingView>
