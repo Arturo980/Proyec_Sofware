@@ -34,6 +34,7 @@ export default function TurnosScreen() {
   const router = useRouter();
   const isTablet = width >= 768;
 
+
   useEffect(() => {
     const loadUserName = async () => {
       try {
@@ -125,6 +126,7 @@ export default function TurnosScreen() {
     setShowForm(false);
     resetForm();
   };
+  
 
   const resetForm = () => {
     setTurnoData({
@@ -139,6 +141,26 @@ export default function TurnosScreen() {
       photoUri: [],  // Resetear a arreglo vacío
     });
   };
+  const handleDeleteTurno = (index) => {
+    Alert.alert(
+      'Eliminar Turno',
+      '¿Estás seguro de que deseas eliminar este turno?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: async () => {
+            const updatedTurnos = turnos.filter((_, i) => i !== index);
+            setTurnos(updatedTurnos);
+            await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
+    setIsEditing(true);
+    setEditingIndex(index);
+    setModalVisible(false);
+    setIsAdding(false);
+  }}
+      ]
+    );
+  } 
 
   const handleViewPhoto = (index) => {
     const turno = turnos[index];
@@ -153,6 +175,37 @@ export default function TurnosScreen() {
       Alert.alert('No hay fotos disponibles', 'Por favor, toma una foto primero.');
     }
   };
+  const handleDeleteAll = async () => {
+    Alert.alert(
+      'Eliminar Todos los Turnos',
+      '¿Estás seguro de que deseas eliminar todos los turnos?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Todo',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('turnos');
+              setTurnos([]);
+            } catch (e) {
+              console.error("Error deleting all turnos", e);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleEditTurno = (index) => {
+    setTurnoData(turnos[index]);
+    setShowForm(true);
+    setIsEditing(true);
+    setIsAdding(false);
+    setEditingIndex(index);
+    setModalVisible(false);
+  };
+
 
   
   const handlePickerOpen = (field) => {
@@ -346,6 +399,18 @@ export default function TurnosScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Opciones</Text>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.updateButton]}
+              onPress={() => handleEditTurno(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Actualizar Turno</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={() => handleDeleteTurno(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Eliminar Turno</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.viewButton]}
               onPress={() => handleViewPhoto(selectedIndex)}
