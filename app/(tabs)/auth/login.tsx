@@ -23,7 +23,13 @@ export default function LoginScreen() {
     try {
       await AsyncStorage.setItem('userName', name);
       console.log('Login successful');
-      router.push('/home');
+      if (name === 'Admin') {
+        router.push('/AdminHome');
+        return;
+      } else{
+        router.push('/home');
+      }
+      
     } catch (error) {
       console.error('Error saving name to AsyncStorage:', error);
     }

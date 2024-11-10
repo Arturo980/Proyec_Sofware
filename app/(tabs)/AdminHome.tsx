@@ -123,12 +123,13 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.gridContainer}>
-        <TouchableOpacity style={styles.card} onPress={() => router.push('../Turnos')}>
-          <Text style={styles.cardText}>Turnos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.card} onPress={() => router.push('../Equipos')}>
-          <Text style={styles.cardText}>Equipos</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminTurnos')}>
+              <Text style={styles.cardText}>Administrador de Turnos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminEquipos')}>
+              <Text style={styles.cardText}>Administrador de Equipos</Text>
+            </TouchableOpacity>
+
         <TouchableOpacity style={styles.exportButton} onPress={exportToExcel}>
           <Text style={styles.exportButtonText}>Exportar a XLSX</Text>
         </TouchableOpacity>
@@ -215,30 +216,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-
-/*
-const handleExportToExcel = async () => {
-    try {
-      const userName = await AsyncStorage.getItem('userName');
-      if (!userName) {
-        throw new Error('No se encontró el nombre de usuario en AsyncStorage');
-      }
-
-      const currentDate = new Date();
-      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
-      const fileName = `${formattedDate}_${userName}.xlsx`;
-
-      // Aquí va tu lógica para exportar a Excel, usando fileName como el nombre del archivo
-      console.log(`Exportando archivo como: ${fileName}`);
-
-      // Ejemplo de cómo podrías usar fileName en tu lógica de exportación
-      // await exportToExcel(data, fileName);
-
-      Alert.alert("Éxito", `Archivo exportado como: ${fileName}`);
-    } catch (error) {
-      console.error("Error exporting to Excel", error);
-      Alert.alert("Error", "No se pudo exportar a Excel.");
-    }
-  };
-  */
