@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import * as MediaLibrary from 'expo-media-library';
+import { Camera } from 'expo-camera';
 
 export default function LoginScreen() {
   const [name, setName] = useState('');
@@ -13,6 +15,24 @@ export default function LoginScreen() {
       setName(''); // Restablece el estado del nombre cuando la pantalla se enfoca
     }, [])
   );
+
+  useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
+        const { status: mediaLibraryStatus } = await MediaLibrary.requestPermissionsAsync();
+
+        if (cameraStatus !== 'granted' || mediaLibraryStatus !== 'granted') {
+          Alert.alert('Error', 'Se requieren permisos para la cámara y la biblioteca de medios.');
+        }
+      } catch (error) {
+        console.error('Error requesting permissions:', error);
+        Alert.alert('Error', 'Hubo un problema al solicitar permisos.');
+      }
+    };
+
+    requestPermissions();
+  }, []);
 
   const handleLogin = async () => {
     if (name.length < 3) {
@@ -26,10 +46,9 @@ export default function LoginScreen() {
       if (name === 'Admin') {
         router.push('/AdminHome');
         return;
-      } else{
+      } else {
         router.push('/home');
       }
-      
     } catch (error) {
       console.error('Error saving name to AsyncStorage:', error);
     }

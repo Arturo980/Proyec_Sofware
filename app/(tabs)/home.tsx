@@ -7,6 +7,7 @@ import XLSX from 'xlsx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -59,6 +60,9 @@ export default function HomeScreen() {
     loadTurnos();
   }, []);
 
+
+
+
   const exportToExcel = async () => {
     try {
       const equiposValue = await AsyncStorage.getItem('equipos');
@@ -72,19 +76,35 @@ export default function HomeScreen() {
       if (!userName) {
         throw new Error('No se encontró el nombre de usuario en AsyncStorage');
       }
-
+  
       const currentDate = new Date();
       const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
       const fileName = `${formattedDate}_${userName}.xlsx`;
-
+  
       XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
       XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
-
+  
       const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
-      const uri = FileSystem.documentDirectory + fileName;
-
-      await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
-      await Sharing.shareAsync(uri);
+  
+      // Usar DocumentPicker para elegir la ruta de guardado
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        copyToCacheDirectory: false,
+      });
+  
+      if (result.type === 'success') {
+        const uri = result.uri;
+  
+        await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
+  
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri);
+        } else {
+          alert('Sharing is not available on this device');
+        }
+      } else {
+        console.log('El usuario canceló la selección del documento');
+      }
     } catch (error) {
       console.error('Error exporting to Excel:', error);
       alert(`Error exporting to Excel: ${error.message}`);
