@@ -170,6 +170,55 @@ export default function TurnosScreen() {
     setPickerVisible(false);
   };
 
+  const handleDeleteTurno = (index) => {
+    Alert.alert(
+      'Eliminar Turno',
+      '¿Estás seguro de que deseas eliminar este turno?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: async () => {
+            const updatedTurnos = turnos.filter((_, i) => i !== index);
+            setTurnos(updatedTurnos);
+            await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
+            setModalVisible(false);
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+  const handleDeleteAll = async () => {
+    Alert.alert(
+      'Eliminar Todos los Turnos',
+      '¿Estás seguro de que deseas eliminar todos los turnos?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Todo',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('turnos');
+              setTurnos([]);
+            } catch (e) {
+              console.error("Error deleting all turnos", e);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleEditTurno = (index) => {
+    setTurnoData(turnos[index]);
+    setShowForm(true);
+    setIsEditing(true);
+    setEditingIndex(index);
+    setModalVisible(false);
+    setIsAdding(false);
+  };
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
       <Text style={styles.cell}>{item.fecha}</Text>
@@ -190,6 +239,10 @@ export default function TurnosScreen() {
     <>
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
+        <Text style={styles.buttonText}>Eliminar Todo</Text>
       </TouchableOpacity>
 
       {showForm && (
@@ -346,6 +399,18 @@ export default function TurnosScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Opciones</Text>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.updateButton]}
+              onPress={() => handleEditTurno(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Actualizar Turno</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={() => handleDeleteTurno(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Eliminar Turno</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.viewButton]}
               onPress={() => handleViewPhoto(selectedIndex)}

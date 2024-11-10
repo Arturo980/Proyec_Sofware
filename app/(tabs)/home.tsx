@@ -1,39 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView } from 'react-native';
 import Svg, { Polygon, Image as SvgImage } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import XLSX from 'xlsx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router'; // Importar useRouter
+import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
-  const router = useRouter(); // Usar useRouter en lugar de useNavigation
-  const [equipos, setEquipos] = useState<any[]>([]);
-  const [turnos, setTurnos] = useState<any[]>([]);
-
-  // Obtener las dimensiones de la pantalla
+  const router = useRouter();
+  const [equipos, setEquipos] = useState([]);
+  const [turnos, setTurnos] = useState([]);
   const { width } = Dimensions.get('window');
-  const isTablet = width >= 768; // Considerar como tablet si el ancho es mayor o igual a 768px
-
+  const isTablet = width >= 768;
   const [userName, setUserName] = useState('');
 
-  useEffect(() => {
-    const fetchUserName = async () => {
-      try {
-        const name = await AsyncStorage.getItem('userName');
-        if (name) {
-          setUserName(name);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUserName = async () => {
+        try {
+          const name = await AsyncStorage.getItem('userName');
+          if (name) {
+            setUserName(name);
+          }
+        } catch (error) {
+          console.error('Error fetching userName from AsyncStorage', error);
         }
-      } catch (error) {
-        console.error('Error fetching userName from AsyncStorage', error);
-      }
-    };
+      };
+      fetchUserName();
+    }, [])
+  );
 
-    fetchUserName();
-  }, []);
-
-  // Cargar los equipos desde AsyncStorage
   const loadEquipos = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('equipos');
@@ -45,7 +43,6 @@ export default function HomeScreen() {
     }
   };
 
-  // Cargar los turnos desde AsyncStorage
   const loadTurnos = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('turnos');
@@ -64,43 +61,40 @@ export default function HomeScreen() {
 
   const exportToExcel = async () => {
     try {
-        const equiposValue = await AsyncStorage.getItem('equipos');
-        const turnosValue = await AsyncStorage.getItem('turnos');
+      const equiposValue = await AsyncStorage.getItem('equipos');
+      const turnosValue = await AsyncStorage.getItem('turnos');
+      const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
+      const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
+      const turnosWorksheet = XLSX.utils.json_to_sheet(turnosData);
+      const equiposWorksheet = XLSX.utils.json_to_sheet(equiposData);
+      const workbook = XLSX.utils.book_new();
+      const userName = await AsyncStorage.getItem('userName');
+      if (!userName) {
+        throw new Error('No se encontró el nombre de usuario en AsyncStorage');
+      }
 
-        const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
-        const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
+      const currentDate = new Date();
+      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
+      const fileName = `${formattedDate}_${userName}.xlsx`;
 
-        const turnosWorksheet = XLSX.utils.json_to_sheet(turnosData);
-        const equiposWorksheet = XLSX.utils.json_to_sheet(equiposData);
-        const workbook = XLSX.utils.book_new();
-        const userName = await AsyncStorage.getItem('userName');
-        if (!userName) {
-            throw new Error('No se encontró el nombre de usuario en AsyncStorage');
-        }
+      XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
+      XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
 
-        const currentDate = new Date();
-        const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
-        const fileName = `${formattedDate}_${userName}.xlsx`;
+      const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
+      const uri = FileSystem.documentDirectory + fileName;
 
-        XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
-        XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
-
-        const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
-        const uri = FileSystem.documentDirectory + fileName;
-
-        await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
-
-        await Sharing.shareAsync(uri);
+      await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
+      await Sharing.shareAsync(uri);
     } catch (error) {
-        console.error('Error exporting to Excel:', error);
-        alert(`Error exporting to Excel: ${error.message}`);
+      console.error('Error exporting to Excel:', error);
+      alert(`Error exporting to Excel: ${error.message}`);
     }
-};
+  };
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('userName'); // Borra el AsyncStorage
-      router.push('auth/login'); // Redirige a la pantalla de login usando router
+      await AsyncStorage.removeItem('userName');
+      router.push('auth/login');
     } catch (error) {
       console.error('Error al borrar AsyncStorage:', error);
     }
@@ -125,9 +119,8 @@ export default function HomeScreen() {
         />
       </Svg>
       <View style={styles.container}>
-      {/* Aquí va tu logo de Minetrack */}
-      <Text style={styles.welcomeText}>Bienvenido {userName}</Text>
-    </View>
+        <Text style={styles.welcomeText}>Bienvenido {userName}</Text>
+      </View>
 
       <View style={styles.gridContainer}>
         <TouchableOpacity style={styles.card} onPress={() => router.push('../Turnos')}>
@@ -136,12 +129,21 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.card} onPress={() => router.push('../Equipos')}>
           <Text style={styles.cardText}>Equipos</Text>
         </TouchableOpacity>
+        {userName.toLowerCase() === 'admin' && (
+          <>
+            <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminTurnos')}>
+              <Text style={styles.cardText}>Administrador de Turnos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminEquipos')}>
+              <Text style={styles.cardText}>Administrador de Equipos</Text>
+            </TouchableOpacity>
+          </>
+        )}
         <TouchableOpacity style={styles.exportButton} onPress={exportToExcel}>
           <Text style={styles.exportButtonText}>Exportar a XLSX</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Aumentar separación del botón de salida */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Salir</Text>
       </TouchableOpacity>
@@ -162,7 +164,6 @@ const styles = StyleSheet.create({
     fontSize: 30,
     marginTop: 10,
   },
-
   hexagon: {
     marginVertical: 20,
   },
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#F0A500',
-    width: '48%', // Ajustar ancho para dos columnas
+    width: '48%',
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
@@ -200,8 +201,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 20,
     alignItems: 'center',
-    width: '100%', // Exportar ocupa el ancho completo
-    marginBottom: 40, // Aumentar separación de "Exportar"
+    width: '100%',
+    marginBottom: 40,
   },
   exportButtonText: {
     color: '#fff',
@@ -224,6 +225,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+
 /*
 const handleExportToExcel = async () => {
     try {

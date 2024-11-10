@@ -93,6 +93,50 @@ export default function EquiposScreen() {
     });
   };
 
+  const handleDeleteEquipo = (index) => {
+    Alert.alert(
+      'Eliminar Equipo',
+      '¿Estás seguro de que deseas eliminar este equipo?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: () => {
+            const updatedEquipos = equipos.filter((_, i) => i !== index);
+            setEquipos(updatedEquipos);
+            saveEquipos(updatedEquipos);
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleDeleteAllEquipos = () => {
+    Alert.alert(
+      'Eliminar Todos los Equipos',
+      '¿Estás seguro de que deseas eliminar todos los equipos?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Todos',
+          onPress: () => {
+            setEquipos([]);
+            saveEquipos([]);
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleEditEquipo = (index) => {
+    setEquipoData(equipos[index]);
+    setShowForm(true);
+    setIsUpdating(true);
+    setUpdateIndex(index);
+  };
+
   const openModal = (index) => {
     setSelectedIndex(index);
     setModalVisible(true);
@@ -102,6 +146,9 @@ export default function EquiposScreen() {
     <>
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Equipo"}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.button, styles.deleteAllButton]} onPress={handleDeleteAllEquipos}>
+        <Text style={styles.buttonText}>Eliminar Todos los Equipos</Text>
       </TouchableOpacity>
       {showForm && (
         <View style={styles.formContainer}>
@@ -221,6 +268,24 @@ export default function EquiposScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Opciones</Text>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.updateButton]}
+              onPress={() => {
+                handleEditEquipo(selectedIndex);
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.modalButtonText}>Actualizar Equipo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={() => {
+                handleDeleteEquipo(selectedIndex);
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.modalButtonText}>Eliminar Equipo</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton]}
               onPress={() => setModalVisible(false)}
