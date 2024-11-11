@@ -3,7 +3,7 @@
     "name": "MineTrack",
     "slug": "Proyec_Sofware",
     "version": "1.0.1",
-    "orientation": "portrait",
+    "orientation": "DEFAULT",
     "icon": "./assets/images/logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
@@ -47,7 +47,13 @@
       "favicon": "./assets/images/logo.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",      
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

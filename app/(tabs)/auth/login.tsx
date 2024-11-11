@@ -5,11 +5,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import * as MediaLibrary from 'expo-media-library';
 import { Camera } from 'expo-camera';
+import useOrientation from '@/hooks/useOrientation';
 import * as FileSystem from 'expo-file-system';
 
 export default function LoginScreen() {
   const [name, setName] = useState('');
   const router = useRouter();
+  const orientation = useOrientation();
 
   useFocusEffect(
     useCallback(() => {

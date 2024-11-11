@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, SectionList, Image } from 'react-native';
+import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, SectionList, Image, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import optionsTurnos from './Jsons/optionsTurnos.json';
-import { Picker } from '@react-native-picker/picker';
 import * as FileSystem from 'expo-file-system';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import { useRouter } from 'expo-router';
@@ -150,23 +149,18 @@ export default function TurnosScreen() {
         {
           text: 'Eliminar',
           onPress: async () => {
-            const turnoToDelete = turnos[index];
-            if (turnoToDelete.photoUri && turnoToDelete.photoUri.length > 0) {
-              await deletePhotos(turnoToDelete.photoUri);
-            }
             const updatedTurnos = turnos.filter((_, i) => i !== index);
             setTurnos(updatedTurnos);
             await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-            setIsEditing(true);
-            setEditingIndex(index);
-            setModalVisible(false);
-            setIsAdding(false);
-          }
-        }
+    setIsEditing(true);
+    setEditingIndex(index);
+    setModalVisible(false);
+    setIsAdding(false);
+  }}
       ]
     );
-  }
-  
+  } 
+
   const handleViewPhoto = (index) => {
     const turno = turnos[index];
     if (turno && turno.photoUri && turno.photoUri.length > 0) {
@@ -190,13 +184,6 @@ export default function TurnosScreen() {
           text: 'Eliminar Todo',
           onPress: async () => {
             try {
-              // Eliminar todas las fotos
-              for (const turno of turnos) {
-                if (turno.photoUri && turno.photoUri.length > 0) {
-                  await deletePhotos(turno.photoUri);
-                }
-              }
-              // Eliminar todos los turnos
               await AsyncStorage.removeItem('turnos');
               setTurnos([]);
             } catch (e) {
@@ -207,17 +194,6 @@ export default function TurnosScreen() {
       ],
       { cancelable: true }
     );
-  };
-  
-  const deletePhotos = async (photoUris) => {
-    for (const uri of photoUris) {
-      try {
-        await FileSystem.deleteAsync(uri);
-        console.log('Photo deleted:', uri);
-      } catch (error) {
-        console.error('Error deleting photo:', error);
-      }
-    }
   };
 
   const handleEditTurno = (index) => {
@@ -262,102 +238,184 @@ export default function TurnosScreen() {
     </View>
   );
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentField, setCurrentField] = useState('');
+  const [selectedOption, setSelectedOption] = useState('');
+  
+  // Función para abrir el modal y establecer el campo actual
+  const openModal = (field) => {
+    setCurrentField(field);
+    setIsModalVisible(true);
+  };
+  
+  // Función para manejar la selección de una opción
+  const handleSelectOption = (option) => {
+    setTurnoData({
+      ...turnoData,
+      [currentField]: option
+    });
+    setIsModalVisible(false);
+  };
+  
   const renderHeader = () => (
     <>
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
-        <Text style={styles.buttonText}>Eliminar Todo</Text>
-      </TouchableOpacity>
-
-
+  
       {showForm && (
         <View style={styles.formContainer}>
-          <TouchableOpacity onPress={() => handleFieldFocus('turnoSaliente')}>
+          <TouchableOpacity onPress={() => openModal('turnoSaliente')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.turnoSaliente || "Turno Saliente"}</Text>
           </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'turnoSaliente' && isAdding && (
-            <Picker
-              selectedValue={turnoData.turnoSaliente}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'turnoSaliente')}
-            >
-              {optionsTurnos.turnoSaliente.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
+  
+          {/* Modal para turnoSaliente */}
+          {isModalVisible && currentField === 'turnoSaliente' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Turno Saliente</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.turnoSaliente.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           )}
-
-          <TouchableOpacity onPress={() => handleFieldFocus('nombreSaliente')}>
+  
+          <TouchableOpacity onPress={() => openModal('nombreSaliente')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.nombreSaliente || "Nombre Saliente"}</Text>
           </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'nombreSaliente' && isAdding && (
-            <Picker
-              selectedValue={turnoData.nombreSaliente}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'nombreSaliente')}
-            >
-              {optionsTurnos.nombreSaliente.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
+  
+          {/* Modal para nombreSaliente */}
+          {isModalVisible && currentField === 'nombreSaliente' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Nombre Saliente</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.nombreSaliente.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           )}
-
-          <TouchableOpacity onPress={() => handleFieldFocus('grupoSaliente')}>
+  
+          <TouchableOpacity onPress={() => openModal('grupoSaliente')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.grupoSaliente || "Grupo Saliente"}</Text>
           </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'grupoSaliente' && isAdding && (
-            <Picker
-              selectedValue={turnoData.grupoSaliente}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'grupoSaliente')}
-            >
-              {optionsTurnos.grupoSaliente.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
+  
+          {/* Modal para grupoSaliente */}
+          {isModalVisible && currentField === 'grupoSaliente' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Grupo Saliente</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.grupoSaliente.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           )}
 
-          <TouchableOpacity onPress={() => handleFieldFocus('postura')}>
+          <TouchableOpacity onPress={() => openModal('postura')}>
             <Text style={styles.input} editable={isAdding}>{turnoData.postura || "Postura"}</Text>
           </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'postura' && isAdding && (
-            <Picker
-              selectedValue={turnoData.postura}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'postura')}
-            >
-              {optionsTurnos.postura.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
+  
+          {/* Modal para postura */}
+          {isModalVisible && currentField === 'postura' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Postura</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.postura.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           )}
 
-          <TouchableOpacity onPress={() => handleFieldFocus('estatusFinal')}>
-            <Text style={styles.input} editable={!isAdding}>{turnoData.estatusFinal || "Estatus Final Reportado"}</Text>
+          <TouchableOpacity onPress={() => openModal('estatusFinal')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.estatusFinal || "Estatus Final"}</Text>
           </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'estatusFinal' && isAdding && (
-            <Picker
-              selectedValue={turnoData.estatusFinal}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'estatusFinal')}
-            >
-              {optionsTurnos.estatusFinal.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
+  
+          {/* Modal para estatusFinal */}
+          {isModalVisible && currentField === 'estatusFinal' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Estatus Final</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.estatusFinal.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           )}
 
-          <TouchableOpacity onPress={() => handleFieldFocus('estatusReal')}>
-            <Text style={styles.input} editable={isAdding}>{turnoData.estatusReal || "Selecciona Estatus Real"}</Text>
+          <TouchableOpacity onPress={() => openModal('estatusReal')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.estatusReal || "Estatus Real"}</Text>
           </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'estatusReal' && isEditing && (
-            <Picker
-              selectedValue={turnoData.estatusReal}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'estatusReal')}
-            >
-              {optionsTurnos.estatusReal.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
+  
+          {/* Modal para estatusReal */}
+          {isModalVisible && currentField === 'estatusReal' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Estatus Real</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.estatusReal.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           )}
-
+            
+          {/* Observación */}
           <TextInput
             placeholder="Observación"
             style={styles.input}
@@ -370,22 +428,21 @@ export default function TurnosScreen() {
             <Text style={styles.buttonText}>Tomar Foto</Text>
           </TouchableOpacity>
           {turnoData.photoUri && turnoData.photoUri.length > 0 && (
-  turnoData.photoUri.map((uri, index) => (
-    <Image
-      key={index}
-      source={{ uri }}
-      style={{ width: 100, height: 100, marginBottom: 10 }}
-    />
-  ))
-)}
-
-
+            turnoData.photoUri.map((uri, index) => (
+              <Image
+                key={index}
+                source={{ uri }}
+                style={{ width: 100, height: 100, marginBottom: 10 }}
+              />
+            ))
+          )}
+  
           <TouchableOpacity style={styles.button} onPress={handleAddTurno}>
             <Text style={styles.buttonText}>{isEditing ? "Actualizar Turno" : "Agregar Turno"}</Text>
           </TouchableOpacity>
         </View>
       )}
-
+  
       <View style={styles.tableContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.headerCell}>Fecha</Text>
@@ -401,6 +458,7 @@ export default function TurnosScreen() {
       </View>
     </>
   );
+  
 
   return (
     <KeyboardAvoidingView
@@ -625,5 +683,44 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semitransparente
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    maxHeight: '80%', // Limitar altura del modal
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalOption: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  modalOptionText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#28a745',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });

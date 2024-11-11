@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import useOrientation from '@/hooks/useOrientation';
 
 export default function MainScreen() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const orientation = useOrientation();
 
   useEffect(() => {
     // Espera hasta que el componente esté completamente montado
