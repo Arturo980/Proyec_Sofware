@@ -123,6 +123,7 @@ export default function TurnosScreen() {
     }
     setTurnos(updatedTurnos);
     await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
+    Alert.alert('Fotos', `El turno se ha agregado correctamente. Ubicación de las fotos: ${turnoData.photoUri.join(', ')}`);
     setShowForm(false);
     resetForm();
   };
@@ -150,18 +151,23 @@ export default function TurnosScreen() {
         {
           text: 'Eliminar',
           onPress: async () => {
+            const turnoToDelete = turnos[index];
+            if (turnoToDelete.photoUri && turnoToDelete.photoUri.length > 0) {
+              await deletePhotos(turnoToDelete.photoUri);
+            }
             const updatedTurnos = turnos.filter((_, i) => i !== index);
             setTurnos(updatedTurnos);
             await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-    setIsEditing(true);
-    setEditingIndex(index);
-    setModalVisible(false);
-    setIsAdding(false);
-  }}
+            setIsEditing(true);
+            setEditingIndex(index);
+            setModalVisible(false);
+            setIsAdding(false);
+          }
+        }
       ]
     );
-  } 
-
+  }
+  
   const handleViewPhoto = (index) => {
     const turno = turnos[index];
     if (turno && turno.photoUri && turno.photoUri.length > 0) {
@@ -185,6 +191,13 @@ export default function TurnosScreen() {
           text: 'Eliminar Todo',
           onPress: async () => {
             try {
+              // Eliminar todas las fotos
+              for (const turno of turnos) {
+                if (turno.photoUri && turno.photoUri.length > 0) {
+                  await deletePhotos(turno.photoUri);
+                }
+              }
+              // Eliminar todos los turnos
               await AsyncStorage.removeItem('turnos');
               setTurnos([]);
             } catch (e) {
@@ -195,6 +208,17 @@ export default function TurnosScreen() {
       ],
       { cancelable: true }
     );
+  };
+  
+  const deletePhotos = async (photoUris) => {
+    for (const uri of photoUris) {
+      try {
+        await FileSystem.deleteAsync(uri);
+        console.log('Photo deleted:', uri);
+      } catch (error) {
+        console.error('Error deleting photo:', error);
+      }
+    }
   };
 
   const handleEditTurno = (index) => {
@@ -244,6 +268,10 @@ export default function TurnosScreen() {
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
+        <Text style={styles.buttonText}>Eliminar Todo</Text>
+      </TouchableOpacity>
+
 
       {showForm && (
         <View style={styles.formContainer}>

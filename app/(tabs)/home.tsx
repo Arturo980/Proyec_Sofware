@@ -7,7 +7,7 @@ import XLSX from 'xlsx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import * as DocumentPicker from 'expo-document-picker';
+import * as MediaLibrary from 'expo-media-library';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -60,16 +60,18 @@ export default function HomeScreen() {
     loadTurnos();
   }, []);
 
-
-
-
+  
   const exportToExcel = async () => {
     try {
       const equiposValue = await AsyncStorage.getItem('equipos');
       const turnosValue = await AsyncStorage.getItem('turnos');
       const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
       const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
-      const turnosWorksheet = XLSX.utils.json_to_sheet(turnosData);
+  
+      // Filtrar los datos de turnos para excluir la columna photoUri
+      const filteredTurnosData = turnosData.map(({ photoUri, ...rest }) => rest);
+  
+      const turnosWorksheet = XLSX.utils.json_to_sheet(filteredTurnosData);
       const equiposWorksheet = XLSX.utils.json_to_sheet(equiposData);
       const workbook = XLSX.utils.book_new();
       const userName = await AsyncStorage.getItem('userName');
@@ -86,33 +88,55 @@ export default function HomeScreen() {
   
       const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
   
-      // Usar DocumentPicker para elegir la ruta de guardado
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        copyToCacheDirectory: false,
-      });
-  
-      if (result.type === 'success') {
-        const uri = result.uri;
-  
-        await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
-  
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(uri);
-        } else {
-          alert('Sharing is not available on this device');
-        }
-      } else {
-        console.log('El usuario canceló la selección del documento');
+      // Solicitar permisos para acceder al almacenamiento
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error('Permiso para acceder al almacenamiento denegado');
       }
+  
+      // Guardar el archivo en el directorio de descargas
+      const downloadDir = `${FileSystem.documentDirectory}MinetrackExport/`;
+      const dirInfo = await FileSystem.getInfoAsync(downloadDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
+      }
+  
+      const fileUri = `${downloadDir}${fileName}`;
+      await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: FileSystem.EncodingType.Base64 });
+  
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      const album = await MediaLibrary.getAlbumAsync('Download');
+      if (album == null) {
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+  
+      console.log(`Archivo exportado como: ${fileUri}`);
+      alert(`Archivo exportado como: ${fileUri}`);
     } catch (error) {
       console.error('Error exporting to Excel:', error);
       alert(`Error exporting to Excel: ${error.message}`);
     }
   };
 
+
   const handleLogout = async () => {
     try {
+      const turnosValue = await AsyncStorage.getItem('turnos');
+      const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
+  
+      // Eliminar fotos de las rutas de photoUri
+      for (const turno of turnosData) {
+        if (turno.photoUri) {
+          try {
+            await FileSystem.deleteAsync(turno.photoUri, { idempotent: true });
+          } catch (error) {
+            console.error('Error deleting photoUri:', error);
+          }
+        }
+      }
+  
       await AsyncStorage.removeItem('userName');
       router.push('auth/login');
     } catch (error) {
