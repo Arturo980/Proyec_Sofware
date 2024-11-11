@@ -123,7 +123,6 @@ export default function TurnosScreen() {
     }
     setTurnos(updatedTurnos);
     await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-    Alert.alert('Fotos', `El turno se ha agregado correctamente. Ubicación de las fotos: ${turnoData.photoUri.join(', ')}`);
     setShowForm(false);
     resetForm();
   };

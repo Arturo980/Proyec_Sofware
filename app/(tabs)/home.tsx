@@ -88,14 +88,15 @@ export default function HomeScreen() {
   
       const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
   
-      // Solicitar permisos para acceder al almacenamiento
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        throw new Error('Permiso para acceder al almacenamiento denegado');
+      // Solicitar permisos para acceder al almacenamiento y a la biblioteca de medios
+      const { status: storageStatus } = await MediaLibrary.requestPermissionsAsync();
+      const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
+      if (storageStatus !== 'granted' || mediaStatus !== 'granted') {
+        throw new Error('Permiso para acceder al almacenamiento o a la biblioteca de medios denegado');
       }
   
       // Guardar el archivo en el directorio de descargas
-      const downloadDir = `${FileSystem.documentDirectory}MinetrackExport/`;
+      const downloadDir = `${FileSystem.documentDirectory}Download/`;
       const dirInfo = await FileSystem.getInfoAsync(downloadDir);
       if (!dirInfo.exists) {
         await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
@@ -103,6 +104,12 @@ export default function HomeScreen() {
   
       const fileUri = `${downloadDir}${fileName}`;
       await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: FileSystem.EncodingType.Base64 });
+  
+      // Verificar si el archivo se ha creado correctamente
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      if (!fileInfo.exists) {
+        throw new Error('El archivo no se ha creado correctamente');
+      }
   
       const asset = await MediaLibrary.createAssetAsync(fileUri);
       const album = await MediaLibrary.getAlbumAsync('Download');
@@ -119,7 +126,6 @@ export default function HomeScreen() {
       alert(`Error exporting to Excel: ${error.message}`);
     }
   };
-
 
   const handleLogout = async () => {
     try {
