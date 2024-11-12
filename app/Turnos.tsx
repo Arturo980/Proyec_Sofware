@@ -560,7 +560,10 @@ export default function TurnosScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton]}
-              onPress={() => setModalVisible(false)}
+              onPress={() => {
+                setModalVisible(false);
+                setIsEditing(false);
+              }}
             >
               <Text style={styles.modalButtonText}>Cancelar</Text>
             </TouchableOpacity>
