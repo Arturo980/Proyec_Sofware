@@ -16,7 +16,10 @@
     "permissions": [
       "CAMERA",
       "MEDIA_LIBRARY",
-      "MEDIA_LIBRARY_WRITE_ONLY"
+      "MEDIA_LIBRARY_WRITE_ONLY",
+      "WRITE_EXTERNAL_STORAGE",
+      "READ_EXTERNAL_STORAGE",
+      "MANAGE_EXTERNAL_STORAGE"
     ],
     "ios": {
       "supportsTablet": true,
@@ -34,6 +37,7 @@
         "MEDIA_LIBRARY_WRITE_ONLY",
         "WRITE_INTERNAL_STORAGE",
         "READ_INTERNAL_STORAGE",
+        "MANAGE_EXTERNAL_STORAGE"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",

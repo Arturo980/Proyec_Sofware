@@ -9,6 +9,10 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as MediaLibrary from 'expo-media-library';
 import useOrientation from '@/hooks/useOrientation';
+import * as Permissions from 'expo-permissions';
+import * as DocumentPicker from 'expo-document-picker';
+
+import { Platform, PermissionsAndroid } from 'react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -63,71 +67,80 @@ export default function HomeScreen() {
   }, []);
 
   
+  // Función para exportar a Excel
+  const requestStoragePermission = async () => {
+    if (Platform.OS === 'android') {
+      const { status } = await MediaLibrary.requestPermissionsAsync(); // Solicitamos permisos directamente desde MediaLibrary
+  
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'No se puede exportar sin permisos de almacenamiento.');
+        return false;
+      }
+  
+      return true;
+    }
+  
+    return true;
+  };
+  
+  // Función para exportar a Excel
   const exportToExcel = async () => {
     try {
+      // Verificar y solicitar permisos
+      const hasPermission = await requestStoragePermission();
+      if (!hasPermission) {
+        Alert.alert('Permiso denegado', 'No se puede exportar sin permisos de almacenamiento.');
+        return;
+      }
+
       const equiposValue = await AsyncStorage.getItem('equipos');
       const turnosValue = await AsyncStorage.getItem('turnos');
       const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
       const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
-  
-      // Filtrar los datos de turnos para excluir la columna photoUri
+
       const filteredTurnosData = turnosData.map(({ photoUri, ...rest }) => rest);
-  
       const turnosWorksheet = XLSX.utils.json_to_sheet(filteredTurnosData);
       const equiposWorksheet = XLSX.utils.json_to_sheet(equiposData);
       const workbook = XLSX.utils.book_new();
+
       const userName = await AsyncStorage.getItem('userName');
       if (!userName) {
         throw new Error('No se encontró el nombre de usuario en AsyncStorage');
       }
-  
+
       const currentDate = new Date();
       const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
       const fileName = `${formattedDate}_${userName}.xlsx`;
-  
+
       XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
       XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
-  
+
       const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
-  
-      // Solicitar permisos para acceder al almacenamiento y a la biblioteca de medios
-      const { status: storageStatus } = await MediaLibrary.requestPermissionsAsync();
-      const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
-      if (storageStatus !== 'granted' || mediaStatus !== 'granted') {
-        throw new Error('Permiso para acceder al almacenamiento o a la biblioteca de medios denegado');
-      }
-  
-      // Guardar el archivo en el directorio de descargas
-      const downloadDir = `${FileSystem.documentDirectory}Download/`;
-      const dirInfo = await FileSystem.getInfoAsync(downloadDir);
-      if (!dirInfo.exists) {
-        await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
-      }
-  
-      const fileUri = `${downloadDir}${fileName}`;
+
+      // Usar cacheDirectory para almacenar el archivo temporal
+      const downloadDirectory = FileSystem.cacheDirectory; // Usar cacheDirectory
+      const fileUri = `${downloadDirectory}${fileName}`;
+
+      // Guardar el archivo en caché
       await FileSystem.writeAsStringAsync(fileUri, wbout, { encoding: FileSystem.EncodingType.Base64 });
-  
-      // Verificar si el archivo se ha creado correctamente
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      if (!fileInfo.exists) {
-        throw new Error('El archivo no se ha creado correctamente');
-      }
-  
-      const asset = await MediaLibrary.createAssetAsync(fileUri);
-      const album = await MediaLibrary.getAlbumAsync('Download');
-      if (album == null) {
-        await MediaLibrary.createAlbumAsync('Download', asset, false);
+
+      console.log("Archivo guardado en caché:", fileUri);
+
+      // Verificar si Sharing está disponible
+      if (await Sharing.isAvailableAsync()) {
+        // Compartir el archivo
+        await Sharing.shareAsync(fileUri);
+        Alert.alert('Éxito', 'Archivo compartido exitosamente');
       } else {
-        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+        Alert.alert('Error', 'No se puede compartir el archivo. Sharing no está disponible en este dispositivo.');
       }
-  
-      console.log(`Archivo exportado como: ${fileUri}`);
-      alert(`Archivo exportado como: ${fileUri}`);
+
     } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      alert(`Error exporting to Excel: ${error.message}`);
+      console.error('Error exporting and sharing to Excel:', error);
+      Alert.alert('Error', `Error exportando y compartiendo a Excel: ${error.message}`);
     }
   };
+
 
   const handleLogout = async () => {
     try {
@@ -153,6 +166,7 @@ export default function HomeScreen() {
   };
 
   return (
+    
     <ScrollView contentContainerStyle={styles.container}>
       
       <View style={styles.navbar}>
