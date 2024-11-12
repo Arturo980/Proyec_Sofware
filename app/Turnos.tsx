@@ -294,6 +294,12 @@ export default function TurnosScreen() {
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.modalButton, styles.deleteButton]}
+        onPress={handleDeleteAll}
+      >
+        <Text style={styles.modalButtonText}>Eliminar todos los turnos</Text>
+      </TouchableOpacity>
   
       {showForm && (
         <View style={styles.formContainer}>
@@ -500,6 +506,7 @@ export default function TurnosScreen() {
       )}
   
       <View style={styles.tableContainer}>
+      
         <View style={styles.headerRow}>
           <Text style={styles.headerCell}>Fecha</Text>
           <Text style={styles.headerCell}>Turno Saliente</Text>
