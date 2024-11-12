@@ -9,5 +9,6 @@
   "estatusFinal": ["Estatus1", "Estatus2", "Estatus3", "Estatus4", "Estatus5", "Estatus6", "Estatus7", "Estatus8", "Estatus9", "Estatus10", 
                    "Estatus11", "Estatus12", "Estatus13", "Estatus14", "Estatus15", "Estatus16", "Estatus17", "Estatus18", "Estatus19", "Estatus20"],
   "estatusReal": ["Real1", "Real2", "Real3", "Real4", "Real5", "Real6", "Real7", "Real8", "Real9", "Real10", 
-                  "Real11", "Real12", "Real13", "Real14", "Real15", "Real16", "Real17", "Real18", "Real19", "Real20"]
+                  "Real11", "Real12", "Real13", "Real14", "Real15", "Real16", "Real17", "Real18", "Real19", "Real20"],
+  "adherencia":["0%","100%"]
 }

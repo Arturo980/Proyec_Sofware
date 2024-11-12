@@ -15,8 +15,10 @@ export default function TurnosScreen() {
     postura: '',
     estatusFinal: '',
     estatusReal: '',
+    adherenciaReporte:'',
     observacion: '',
-    NombreRegistrante: '',
+    NombreSaliente: '',
+    NombreEntrante: '',
     photoUri: [],  // Cambiado para manejar múltiples fotos
   });
   const [turnos, setTurnos] = useState([]);
@@ -39,7 +41,6 @@ export default function TurnosScreen() {
       try {
         const NombreRegistrante = await AsyncStorage.getItem('userName');
         if (NombreRegistrante != null) {
-          setTurnoData(prevState => ({ ...prevState, NombreRegistrante }));
         }
       } catch (e) {
         console.error("Error loading userName", e);
@@ -105,28 +106,62 @@ export default function TurnosScreen() {
   };
 
   const handleAddTurno = async () => {
-    setIsAdding(true)
-    setIsEditing(false);
-    const newTurno = {
-      fecha: new Date().toLocaleDateString('es-ES'),
-      ...turnoData,
-    };
-    let updatedTurnos;
-    if (isEditing) {
-      updatedTurnos = [...turnos];
-      updatedTurnos[editingIndex] = newTurno;
+    try {
+      const NombreSaliente = await AsyncStorage.getItem('userName');
+      if (NombreSaliente != null) {
+        setTurnoData(prevState => ({
+          ...prevState,
+          NombreSaliente: NombreSaliente
+        }));
+      }
+      setIsAdding(true);
       setIsEditing(false);
-      setEditingIndex(null);
-    } else {
-      updatedTurnos = [newTurno, ...turnos];
+      const newTurno = {
+        fecha: new Date().toLocaleDateString('es-ES'),
+        ...turnoData,
+        NombreSaliente: NombreSaliente // Asegurarse de que el nombre se incluya en el nuevo turno
+      };
+      let updatedTurnos;
+      if (isEditing) {
+        updatedTurnos = [...turnos];
+        updatedTurnos[editingIndex] = newTurno;
+        setIsEditing(false);
+        setEditingIndex(null);
+      } else {
+        updatedTurnos = [newTurno, ...turnos];
+      }
+      setTurnos(updatedTurnos);
+      await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
+      setShowForm(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error adding turno", error);
     }
-    setTurnos(updatedTurnos);
-    await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-    setShowForm(false);
-    resetForm();
   };
   
-
+  const handleEditTurno = async (index) => {
+    try {
+      const NombreEntrante = await AsyncStorage.getItem('userName');
+      if (NombreEntrante != null) {
+        setTurnoData(prevState => ({
+          ...prevState,
+          NombreEntrante: NombreEntrante
+        }));
+      }
+      const updatedTurno = {
+        ...turnos[index],
+        NombreEntrante: NombreEntrante // Asegurarse de que el nombre se incluya en el turno actualizado
+      };
+      setTurnoData(updatedTurno);
+      setShowForm(true);
+      setIsEditing(true);
+      setIsAdding(false);
+      setEditingIndex(index);
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Error editing turno", error);
+    }
+  };
   const resetForm = () => {
     setTurnoData({
       turnoSaliente: '',
@@ -135,11 +170,14 @@ export default function TurnosScreen() {
       postura: '',
       estatusFinal: '',
       estatusReal: '',
+      adherenciaReporte:'',
       observacion: '',
-      NombreRegistrante: '',
+      NombreSaliente: '',
+      NombreEntrante: '',
       photoUri: [],  // Resetear a arreglo vacío
     });
   };
+
   const handleDeleteTurno = (index) => {
     Alert.alert(
       'Eliminar Turno',
@@ -152,14 +190,15 @@ export default function TurnosScreen() {
             const updatedTurnos = turnos.filter((_, i) => i !== index);
             setTurnos(updatedTurnos);
             await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-    setIsEditing(true);
-    setEditingIndex(index);
-    setModalVisible(false);
-    setIsAdding(false);
-  }}
+            setIsEditing(true);
+            setEditingIndex(index);
+            setModalVisible(false);
+            setIsAdding(false);
+          }
+        }
       ]
     );
-  } 
+  };
 
   const handleViewPhoto = (index) => {
     const turno = turnos[index];
@@ -174,6 +213,7 @@ export default function TurnosScreen() {
       Alert.alert('No hay fotos disponibles', 'Por favor, toma una foto primero.');
     }
   };
+
   const handleDeleteAll = async () => {
     Alert.alert(
       'Eliminar Todos los Turnos',
@@ -194,15 +234,6 @@ export default function TurnosScreen() {
       ],
       { cancelable: true }
     );
-  };
-
-  const handleEditTurno = (index) => {
-    setTurnoData(turnos[index]);
-    setShowForm(true);
-    setIsEditing(true);
-    setIsAdding(false);
-    setEditingIndex(index);
-    setModalVisible(false);
   };
 
 
@@ -231,6 +262,7 @@ export default function TurnosScreen() {
       <Text style={styles.cell}>{item.postura}</Text>
       <Text style={styles.cell}>{item.estatusFinal}</Text>
       <Text style={styles.cell}>{item.estatusReal}</Text>
+      <Text style={styles.cell}>{item.adherenciaReporte}</Text>
       <Text style={styles.cell}>{item.observacion}</Text>
       <TouchableOpacity style={styles.grayButton} onPress={() => { setSelectedIndex(index); setModalVisible(true); }}>
         <Text style={styles.buttongtext}>Opciones</Text>
@@ -402,6 +434,30 @@ export default function TurnosScreen() {
                   <Text style={styles.modalTitle}>Selecciona Estatus Real</Text>
                   <ScrollView style={styles.scrollview}>
                     {optionsTurnos.estatusReal.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+          <TouchableOpacity onPress={() => openModal('adherenciaReporte')}>
+            <Text style={styles.input} editable={isAdding}>{turnoData.adherenciaReporte || "Adherencia Reporte"}</Text>
+          </TouchableOpacity>
+  
+          {/* Modal para estatusReal */}
+          {isModalVisible && isEditing && currentField === 'adherenciaReporte' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Adherencia</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.adherencia.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>

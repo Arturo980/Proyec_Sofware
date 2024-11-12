@@ -1,0 +1,14 @@
+{
+  "Equipo": ["Equipo1", "Equipo2", "Equipo3"],
+  "Marca": ["MarcaA", "MarcaB", "MarcaC"],
+  "N° Interno": ["001", "002", "003"],
+  "Estado": ["Activo", "Inactivo", "Mantenimiento"],
+  "% Petróleo": ["10%", "20%", "30%"],
+  "Estándar Petróleo": ["Estándar1", "Estándar2", "Estándar3"],
+  "Adherencia Petróleo": ["Alta", "Media", "Baja"],
+  "Ubicación": ["Ubicación1", "Ubicación2", "Ubicación3"],
+  "Estándar Estacionamiento": ["EstándarA", "EstándarB", "EstándarC"],
+  "Nivel": ["Nivel1", "Nivel2", "Nivel3"],
+  "Report": ["Report1", "Report2", "Report3"],
+  "Grupo": ["GrupoA", "GrupoB", "GrupoC"]
+}
