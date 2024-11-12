@@ -270,7 +270,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
   
           {/* Modal para turnoSaliente */}
-          {isModalVisible && currentField === 'turnoSaliente' && (
+          {isModalVisible && !isEditing && currentField === 'turnoSaliente' && (
             <Modal transparent={true} animationType="slide" visible={isModalVisible}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
@@ -295,7 +295,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
   
           {/* Modal para nombreSaliente */}
-          {isModalVisible && currentField === 'nombreSaliente' && (
+          {isModalVisible && !isEditing && currentField === 'nombreSaliente' && (
             <Modal transparent={true} animationType="slide" visible={isModalVisible}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
@@ -320,7 +320,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
   
           {/* Modal para grupoSaliente */}
-          {isModalVisible && currentField === 'grupoSaliente' && (
+          {isModalVisible && !isEditing && currentField === 'grupoSaliente' && (
             <Modal transparent={true} animationType="slide" visible={isModalVisible}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
@@ -345,7 +345,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
   
           {/* Modal para postura */}
-          {isModalVisible && currentField === 'postura' && (
+          {isModalVisible && !isEditing && currentField === 'postura' && (
             <Modal transparent={true} animationType="slide" visible={isModalVisible}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
@@ -370,7 +370,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
   
           {/* Modal para estatusFinal */}
-          {isModalVisible && currentField === 'estatusFinal' && (
+          {isModalVisible && !isEditing && currentField === 'estatusFinal' && (
             <Modal transparent={true} animationType="slide" visible={isModalVisible}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
@@ -395,7 +395,7 @@ export default function TurnosScreen() {
           </TouchableOpacity>
   
           {/* Modal para estatusReal */}
-          {isModalVisible && currentField === 'estatusReal' && (
+          {isModalVisible && isEditing && currentField === 'estatusReal' && (
             <Modal transparent={true} animationType="slide" visible={isModalVisible}>
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
