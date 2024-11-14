@@ -56,7 +56,10 @@ export default function EquiposScreen() {
     try {
       const jsonValue = await AsyncStorage.getItem('equipos');
       if (jsonValue != null) {
-        setEquipos(JSON.parse(jsonValue));
+        const loadedEquipos = JSON.parse(jsonValue);
+        // Sort equipos by date in descending order
+        loadedEquipos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        setEquipos(loadedEquipos);
       }
     } catch (e) {
       console.error("Error loading equipos", e);
@@ -122,7 +125,7 @@ export default function EquiposScreen() {
 
   const handleAddEquipo = () => {
     const newEquipo = { ...equipoData, fecha: getCurrentDate() };
-    const updatedEquipos = [...equipos, newEquipo];
+    const updatedEquipos = [newEquipo, ...equipos]; // Add new equipo at the beginning
     setEquipos(updatedEquipos);
     saveEquipos(updatedEquipos);
     setShowForm(false);
