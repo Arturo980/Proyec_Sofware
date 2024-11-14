@@ -16,9 +16,16 @@ export default function EquiposScreen() {
     estado: '',
     porcentajePetroleo: '',
     observacion: '',
-    NombreRegistrante: '',
     photoUri: [],  // Handle multiple photos
     turno: '',  // Add new field
+    estandarPetroleo: '',  // Add new field
+    adherenciaPetroleo: '',  // Add new field
+    ubicacion: '',  // Add new field
+    estandarES: '',  // Add new field
+    nivel: '',  // Add new field
+    report: '',  // Add new field
+    grupo: '',
+    NombreRegistrante: '',  // Add new field
   });
 
   const [equipos, setEquipos] = useState([]);
@@ -143,9 +150,16 @@ export default function EquiposScreen() {
       estado: '',
       porcentajePetroleo: '',
       observacion: '',
-      NombreRegistrante: '',
       photoUri: [],  // Reset to empty array
-      turno: '',  // Reset new field
+      turno: '', // Reset new field
+      estandarPetroleo: '',  // Reset new field
+      adherenciaPetroleo: '',  // Reset new field
+      ubicacion: '',  // Reset new field
+      estandarES: '',  // Reset new field
+      nivel: '',  // Reset new field
+      report: '',  // Reset new field
+      grupo: '',    
+      NombreRegistrante: '',  // Reset new field
     });
   };
 
@@ -396,6 +410,167 @@ export default function EquiposScreen() {
             </Modal>
           )}
 
+          <TouchableOpacity onPress={() => openModal('estandarPetroleo')}>
+            <Text style={styles.input}>{equipoData.estandarPetroleo || "Estándar Petróleo"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'estandarPetroleo' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Estándar Petróleo</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.EstandarPetroleo.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('adherenciaPetroleo')}>
+            <Text style={styles.input}>{equipoData.adherenciaPetroleo || "Adherencia Petróleo"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'adherenciaPetroleo' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Adherencia Petróleo</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.AdherenciaPetroleo.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('ubicacion')}>
+            <Text style={styles.input}>{equipoData.ubicacion || "Ubicación"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'ubicacion' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Ubicación</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Ubicacion.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('estandarES')}>
+            <Text style={styles.input}>{equipoData.estandarES || "Estándar ES"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'estandarES' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Estándar ES</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.EstandarES.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('nivel')}>
+            <Text style={styles.input}>{equipoData.nivel || "Nivel"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'nivel' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Nivel</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Nivel.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('report')}>
+            <Text style={styles.input}>{equipoData.report || "Report"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'report' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Report</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Report.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('grupo')}>
+            <Text style={styles.input}>{equipoData.grupo || "Grupo"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'grupo' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Grupo</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Grupo.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
           <TextInput
             placeholder="Observación"
             style={styles.input}
@@ -485,6 +660,56 @@ export default function EquiposScreen() {
       );
     }
     return null;
+  };
+
+  const renderModalContent = () => {
+    let options = [];
+    switch (currentField) {
+      case 'equipo':
+        options = optionsEquipos.Equipos.map(e => e.Equipo);
+        break;
+      case 'numeroInterno':
+        options = optionsEquipos.NuInterno;
+        break;
+      case 'estado':
+        options = optionsEquipos.Estado;
+        break;
+      case 'porcentajePetroleo':
+        options = optionsEquipos.Petroleo;
+        break;
+      case 'estandarPetroleo':
+        options = optionsEquipos.EstandarPetroleo;
+        break;
+      case 'adherenciaPetroleo':
+        options = optionsEquipos.AdherenciaPetroleo;
+        break;
+      case 'ubicacion':
+        options = optionsEquipos.Ubicacion;
+        break;
+      case 'estandarES':
+        options = optionsEquipos.EstandarES;
+        break;
+      case 'nivel':
+        options = optionsEquipos.Nivel;
+        break;
+      case 'report':
+        options = optionsEquipos.Report;
+        break;
+      case 'grupo':
+        options = optionsEquipos.Grupo;
+        break;
+      default:
+        options = [];
+    }
+    return (
+      <ScrollView style={styles.scrollview}>
+        {options.map((option, index) => (
+          <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+            <Text style={styles.modalOptionText}>{option}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    );
   };
 
   return (
