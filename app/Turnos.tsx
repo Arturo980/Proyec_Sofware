@@ -178,28 +178,7 @@ export default function TurnosScreen() {
     });
   };
 
-  const handleDeleteTurno = (index) => {
-    Alert.alert(
-      'Eliminar Turno',
-      '¿Estás seguro de que deseas eliminar este turno?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          onPress: async () => {
-            const updatedTurnos = turnos.filter((_, i) => i !== index);
-            setTurnos(updatedTurnos);
-            await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-            setIsEditing(true);
-            setEditingIndex(index);
-            setModalVisible(false);
-            setIsAdding(false);
-          }
-        }
-      ]
-    );
-  };
-
+  
   const handleViewPhoto = (index) => {
     const turno = turnos[index];
     if (turno && turno.photoUri && turno.photoUri.length > 0) {
@@ -213,8 +192,38 @@ export default function TurnosScreen() {
       Alert.alert('No hay fotos disponibles', 'Por favor, toma una foto primero.');
     }
   };
+  const handleDeleteTurno = (index) => {
+    Alert.alert(
+      'Eliminar Turno',
+      '¿Estás seguro de que deseas eliminar este turno?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: async () => {
+            const turnoToDelete = turnos[index];
+            const updatedTurnos = turnos.filter((_, i) => i !== index);
+            setTurnos(updatedTurnos);
+            await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
+            
+            // Eliminar fotos
+            if (turnoToDelete.photosUri) {
+              for (const uri of turnoToDelete.photosUri) {
+                await FileSystem.deleteAsync(uri, { idempotent: true });
+              }
+            }
 
-  const handleDeleteAll = async () => {
+            setIsEditing(true);
+            setEditingIndex(index);
+            setModalVisible(false);
+            setIsAdding(false);
+          }
+        }
+      ]
+    );
+  };
+
+const handleDeleteAll = async () => {
     Alert.alert(
       'Eliminar Todos los Turnos',
       '¿Estás seguro de que deseas eliminar todos los turnos?',
@@ -224,6 +233,15 @@ export default function TurnosScreen() {
           text: 'Eliminar Todo',
           onPress: async () => {
             try {
+              // Eliminar fotos de todos los turnos
+              for (const turno of turnos) {
+                if (turno.photosUri) {
+                  for (const uri of turno.photosUri) {
+                    await FileSystem.deleteAsync(uri, { idempotent: true });
+                  }
+                }
+              }
+
               await AsyncStorage.removeItem('turnos');
               setTurnos([]);
             } catch (e) {
@@ -235,7 +253,6 @@ export default function TurnosScreen() {
       { cancelable: true }
     );
   };
-
 
   
   const handlePickerOpen = (field) => {
