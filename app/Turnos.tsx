@@ -312,10 +312,10 @@ const handleDeleteAll = async () => {
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.modalButton, styles.deleteButton]}
+        style={[styles.button, styles.deleteAllButton]} // Apply the deleteAllButton style
         onPress={handleDeleteAll}
       >
-        <Text style={styles.modalButtonText}>Eliminar todos los turnos</Text>
+        <Text style={styles.buttonText}>Eliminar todos los turnos</Text>
       </TouchableOpacity>
   
       {showForm && (
@@ -692,13 +692,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  deleteAllButton: {
-    backgroundColor: '#FF6B6B',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 10, // Increase padding to make the button larger
-  },
   buttonText: {
     color: 'white',
     fontSize: 16,
@@ -805,5 +798,8 @@ const styles = StyleSheet.create({
   modalCloseButtonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  deleteAllButton: {
+    backgroundColor: '#FF6B6B', // Red color for the delete all button
   },
 });

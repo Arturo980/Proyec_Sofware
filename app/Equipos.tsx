@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, Alert, Modal, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import optionsEquipos from './Jsons/optionsEquipos.json';
+import optionsTurnos from './Jsons/optionsTurnos.json';
+import { useRouter } from 'expo-router';
 
 export default function EquiposScreen() {
   const [equipoData, setEquipoData] = useState({
@@ -12,6 +17,8 @@ export default function EquiposScreen() {
     porcentajePetroleo: '',
     observacion: '',
     NombreRegistrante: '',
+    photoUri: [],  // Handle multiple photos
+    turno: '',  // Add new field
   });
 
   const [equipos, setEquipos] = useState([]);
@@ -20,6 +27,9 @@ export default function EquiposScreen() {
   const [updateIndex, setUpdateIndex] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentField, setCurrentField] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     const loadUserName = async () => {
@@ -59,8 +69,52 @@ export default function EquiposScreen() {
     loadEquipos();
   }, []);
 
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Se requiere permiso para acceder a la cámara.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync();
+      if (result.cancelled) {
+        alert('La toma de la foto fue cancelada.');
+        return;
+      }
+
+      if (!result.assets || !result.assets[0].uri) {
+        alert('No se pudo obtener la URI de la foto.');
+        return;
+      }
+
+      const fileName = result.assets[0].uri.split('/').pop();
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+
+      await FileSystem.moveAsync({
+        from: result.assets[0].uri,
+        to: fileUri,
+      });
+
+      setEquipoData(prevState => ({
+        ...prevState,
+        photoUri: [...prevState.photoUri, fileUri], // Add new photo
+      }));
+
+      Alert.alert('Foto Agregada', 'La foto se ha agregado correctamente.');
+    } catch (error) {
+      console.error("Error taking photo", error);
+      Alert.alert('Error', 'Hubo un problema al tomar la foto.');
+    }
+  };
+
+  const getCurrentDate = () => {
+    const date = new Date();
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+
   const handleAddEquipo = () => {
-    const newEquipo = { ...equipoData };
+    const newEquipo = { ...equipoData, fecha: getCurrentDate() };
     const updatedEquipos = [...equipos, newEquipo];
     setEquipos(updatedEquipos);
     saveEquipos(updatedEquipos);
@@ -70,7 +124,7 @@ export default function EquiposScreen() {
 
   const handleUpdateEquipo = () => {
     const updatedEquipos = equipos.map((equipo, index) => 
-      index === updateIndex ? equipoData : equipo
+      index === updateIndex ? { ...equipoData, fecha: getCurrentDate() } : equipo
     );
     setEquipos(updatedEquipos);
     saveEquipos(updatedEquipos);
@@ -90,12 +144,120 @@ export default function EquiposScreen() {
       porcentajePetroleo: '',
       observacion: '',
       NombreRegistrante: '',
+      photoUri: [],  // Reset to empty array
+      turno: '',  // Reset new field
     });
   };
 
-  const openModal = (index) => {
+  const openModal = (field, index = null) => {
+    setCurrentField(field);
     setSelectedIndex(index);
-    setModalVisible(true);
+    if (field === 'options') {
+      setModalVisible(true);
+    } else {
+      setIsModalVisible(true);
+    }
+  };
+
+  const handleSelectOption = (option) => {
+    if (currentField === 'equipo') {
+      const selectedEquipo = optionsEquipos.Equipos.find(e => e.Equipo === option);
+      setEquipoData({
+        ...equipoData,
+        equipo: option,
+        marca: selectedEquipo ? selectedEquipo.Marca : ''
+      });
+    } else {
+      setEquipoData({
+        ...equipoData,
+        [currentField]: option
+      });
+    }
+    setIsModalVisible(false);
+  };
+
+  const handleEditEquipo = (index) => {
+    const equipoToEdit = equipos[index];
+    setEquipoData(equipoToEdit);
+    setShowForm(true);
+    setIsUpdating(true);
+    setUpdateIndex(index);
+    setModalVisible(false);
+  };
+
+  const handleDeleteEquipo = (index) => {
+    Alert.alert(
+      'Eliminar Equipo',
+      '¿Estás seguro de que deseas eliminar este equipo?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: async () => {
+            const equipoToDelete = equipos[index];
+            const updatedEquipos = equipos.filter((_, i) => i !== index);
+            setEquipos(updatedEquipos);
+            await AsyncStorage.setItem('equipos', JSON.stringify(updatedEquipos));
+            
+            // Eliminar fotos
+            if (equipoToDelete.photoUri) {
+              for (const uri of equipoToDelete.photoUri) {
+                await FileSystem.deleteAsync(uri, { idempotent: true });
+              }
+            }
+
+            setIsUpdating(false);
+            setUpdateIndex(null);
+            setModalVisible(false);
+          }
+        }
+      ]
+    );
+  };
+
+  const handleViewPhoto = (index) => {
+    const equipo = equipos[index];
+    if (equipo && equipo.photoUri && equipo.photoUri.length > 0) {
+      console.log("Navigating to PhotoViewerScreen with photoUris:", equipo.photoUri);  
+      router.push({
+        pathname: '/PhotoViewerScreen',
+        params: { photoUris: equipo.photoUri },  // Pasar el arreglo de fotos
+      });
+    } else {
+      console.log("No photos found for equipo:", equipo);  
+      Alert.alert('No hay fotos disponibles', 'Por favor, toma una foto primero.');
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    Alert.alert(
+      'Eliminar Todos los Equipos',
+      '¿Estás seguro de que deseas eliminar todos los equipos?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Todo',
+          onPress: async () => {
+            try {
+              // Eliminar fotos de todos los equipos
+              for (const equipo of equipos) {
+                if (equipo.photoUri) {
+                  for (const uri of equipo.photoUri) {
+                    await FileSystem.deleteAsync(uri, { idempotent: true });
+                  }
+                }
+              }
+
+              await AsyncStorage.removeItem('equipos');
+              setEquipos([]);
+            } catch (e) {
+              console.error("Error deleting all equipos", e);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const renderHeader = () => (
@@ -103,29 +265,83 @@ export default function EquiposScreen() {
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Equipo"}</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, styles.deleteAllButton, styles.deleteAllButtonMargin]}
+        onPress={handleDeleteAll}
+      >
+        <Text style={styles.buttonText}>Eliminar todos los equipos</Text>
+      </TouchableOpacity>
       {showForm && (
         <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Equipo"
-            style={styles.input}
-            value={equipoData.equipo}
-            onChangeText={(text) => setEquipoData({ ...equipoData, equipo: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="Marca"
-            style={styles.input}
-            value={equipoData.marca}
-            onChangeText={(text) => setEquipoData({ ...equipoData, marca: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="Número Interno"
-            style={styles.input}
-            value={equipoData.numeroInterno}
-            onChangeText={(text) => setEquipoData({ ...equipoData, numeroInterno: text })}
-            placeholderTextColor="#888"
-          />
+          <TouchableOpacity onPress={() => openModal('equipo')}>
+            <Text style={styles.input}>{equipoData.equipo || "Equipo"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'equipo' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Equipo</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Equipos.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option.Equipo)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option.Equipo}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('marca')}>
+            <Text style={styles.input}>{equipoData.marca || "Marca"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'marca' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Marca</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Equipos.filter(e => e.Equipo === equipoData.equipo).map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option.Marca)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option.Marca}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('numeroInterno')}>
+            <Text style={styles.input}>{equipoData.numeroInterno || "Número Interno"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'numeroInterno' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Número Interno</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.NuInterno.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
           <TextInput
             placeholder="Operador"
             style={styles.input}
@@ -133,20 +349,53 @@ export default function EquiposScreen() {
             onChangeText={(text) => setEquipoData({ ...equipoData, operador: text })}
             placeholderTextColor="#888"
           />
-          <TextInput
-            placeholder="Estado"
-            style={styles.input}
-            value={equipoData.estado}
-            onChangeText={(text) => setEquipoData({ ...equipoData, estado: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="% Petróleo"
-            style={styles.input}
-            value={equipoData.porcentajePetroleo}
-            onChangeText={(text) => setEquipoData({ ...equipoData, porcentajePetroleo: text })}
-            placeholderTextColor="#888"
-          />
+
+          <TouchableOpacity onPress={() => openModal('estado')}>
+            <Text style={styles.input}>{equipoData.estado || "Estado"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'estado' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Estado</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Estado.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity onPress={() => openModal('porcentajePetroleo')}>
+            <Text style={styles.input}>{equipoData.porcentajePetroleo || "% Petróleo"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'porcentajePetroleo' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona % Petróleo</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsEquipos.Petroleo.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
           <TextInput
             placeholder="Observación"
             style={styles.input}
@@ -154,6 +403,43 @@ export default function EquiposScreen() {
             onChangeText={(text) => setEquipoData({ ...equipoData, observacion: text })}
             placeholderTextColor="#888"
           />
+
+          <TouchableOpacity onPress={() => openModal('turno')}>
+            <Text style={styles.input}>{equipoData.turno || "Turno"}</Text>
+          </TouchableOpacity>
+          {isModalVisible && currentField === 'turno' && (
+            <Modal transparent={true} animationType="slide" visible={isModalVisible}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Selecciona Turno</Text>
+                  <ScrollView style={styles.scrollview}>
+                    {optionsTurnos.turnoSaliente.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalCloseButton}>
+                    <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          <TouchableOpacity style={styles.button} onPress={takePhoto}>
+            <Text style={styles.buttonText}>Tomar Foto</Text>
+          </TouchableOpacity>
+          {equipoData.photoUri && equipoData.photoUri.length > 0 && (
+            equipoData.photoUri.map((uri, index) => (
+              <Image
+                key={index}
+                source={{ uri }}
+                style={{ width: 100, height: 100, marginBottom: 10 }}
+              />
+            ))
+          )}
+
           <TouchableOpacity style={styles.button} onPress={isUpdating ? handleUpdateEquipo : handleAddEquipo}>
             <Text style={styles.buttonText}>{isUpdating ? "Actualizar Equipo" : "Agregar Equipo"}</Text>
           </TouchableOpacity>
@@ -164,6 +450,7 @@ export default function EquiposScreen() {
 
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
+      <Text style={styles.cell}>{item.fecha}</Text>
       <Text style={styles.cell}>{item.equipo}</Text>
       <Text style={styles.cell}>{item.marca}</Text>
       <Text style={styles.cell}>{item.numeroInterno}</Text>
@@ -171,8 +458,9 @@ export default function EquiposScreen() {
       <Text style={styles.cell}>{item.estado}</Text>
       <Text style={styles.cell}>{item.porcentajePetroleo}</Text>
       <Text style={styles.cell}>{item.observacion}</Text>
+      <Text style={styles.cell}>{item.turno}</Text>
       <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.actionButton, styles.optionsButton]} onPress={() => openModal(index)}>
+        <TouchableOpacity style={[styles.actionButton, styles.optionsButton]} onPress={() => openModal('options', index)}>
           <Text style={styles.actionText}>Opciones</Text>
         </TouchableOpacity>
       </View>
@@ -183,6 +471,7 @@ export default function EquiposScreen() {
     if (title === 'Equipos') {
       return (
         <View style={styles.headerRow}>
+          <Text style={styles.headerCell}>Fecha</Text>
           <Text style={styles.headerCell}>Equipo</Text>
           <Text style={styles.headerCell}>Marca</Text>
           <Text style={styles.headerCell}>Número Interno</Text>
@@ -190,6 +479,7 @@ export default function EquiposScreen() {
           <Text style={styles.headerCell}>Estado</Text>
           <Text style={styles.headerCell}>% Petróleo</Text>
           <Text style={styles.headerCell}>Observación</Text>
+          <Text style={styles.headerCell}>Turno</Text>
           <Text style={styles.headerCell}>Acciones</Text>
         </View>
       );
@@ -221,6 +511,24 @@ export default function EquiposScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Opciones</Text>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.updateButton]}
+              onPress={() => handleEditEquipo(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Actualizar Equipo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={() => handleDeleteEquipo(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Eliminar Equipo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.viewButton]}
+              onPress={() => handleViewPhoto(selectedIndex)}
+            >
+              <Text style={styles.modalButtonText}>Ver Foto</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton]}
               onPress={() => setModalVisible(false)}
@@ -363,8 +671,47 @@ const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: '#A9A9A9',
   },
+  viewButton: {
+    backgroundColor: '#FFD700', // Yellow color
+  },
   modalButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalOption: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  modalOptionText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#28a745',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  deleteAllButtonMargin: {
+    marginBottom: 20, // Add margin to create space
   },
 });

@@ -1,6 +1,18 @@
 {
-  "Equipo": ["Equipo1", "Equipo2", "Equipo3"],
-  "Marca": ["MarcaA", "MarcaB", "MarcaC"],
+  "Equipos": [
+    {
+      "Equipo": "Equipo1",
+      "Marca": "MarcaA"
+    },
+    {
+      "Equipo": "Equipo2",
+      "Marca": "MarcaB"
+    },
+    {
+      "Equipo": "Equipo3",
+      "Marca": "MarcaC"
+    }
+  ],
   "NuInterno": ["001", "002", "003"],
   "Estado": ["Activo", "Inactivo", "Mantenimiento"],
   "Petroleo": ["10%", "20%", "30%"],
