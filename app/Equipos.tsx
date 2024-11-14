@@ -36,6 +36,7 @@ export default function EquiposScreen() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentField, setCurrentField] = useState('');
+  const [options, setOptions] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -169,11 +170,51 @@ export default function EquiposScreen() {
   const openModal = (field, index = null) => {
     setCurrentField(field);
     setSelectedIndex(index);
-    if (field === 'options') {
-      setModalVisible(true);
+    let uniqueOptions = [];
+    if (field === 'marca' && equipoData.equipo) {
+      const selectedEquipo = optionsEquipos.Equipos.find(e => e.Equipo === equipoData.equipo);
+      uniqueOptions = selectedEquipo ? [...new Set(selectedEquipo.Marca)] : [];
     } else {
-      setIsModalVisible(true);
+      switch (field) {
+        case 'equipo':
+          uniqueOptions = [...new Set(optionsEquipos.Equipos.map(e => e.Equipo))];
+          break;
+        case 'numeroInterno':
+          uniqueOptions = optionsEquipos.NuInterno;
+          break;
+        case 'estado':
+          uniqueOptions = optionsEquipos.Estado;
+          break;
+        case 'porcentajePetroleo':
+          uniqueOptions = optionsEquipos.Petroleo;
+          break;
+        case 'estandarPetroleo':
+          uniqueOptions = optionsEquipos.EstandarPetroleo;
+          break;
+        case 'adherenciaPetroleo':
+          uniqueOptions = optionsEquipos.AdherenciaPetroleo;
+          break;
+        case 'ubicacion':
+          uniqueOptions = optionsEquipos.Ubicacion;
+          break;
+        case 'estandarES':
+          uniqueOptions = optionsEquipos.EstandarES;
+          break;
+        case 'nivel':
+          uniqueOptions = optionsEquipos.Nivel;
+          break;
+        case 'report':
+          uniqueOptions = optionsEquipos.Report;
+          break;
+        case 'grupo':
+          uniqueOptions = optionsEquipos.Grupo;
+          break;
+        default:
+          uniqueOptions = [];
+      }
     }
+    setOptions(uniqueOptions);
+    setIsModalVisible(true);
   };
 
   const handleSelectOption = (option) => {
@@ -182,7 +223,12 @@ export default function EquiposScreen() {
       setEquipoData({
         ...equipoData,
         equipo: option,
-        marca: selectedEquipo ? selectedEquipo.Marca : ''
+        marca: selectedEquipo && Array.isArray(selectedEquipo.Marca) ? selectedEquipo.Marca[0] : '' // Handle multiple brands
+      });
+    } else if (currentField === 'marca') {
+      setEquipoData({
+        ...equipoData,
+        marca: option
       });
     } else {
       setEquipoData({
@@ -329,9 +375,9 @@ export default function EquiposScreen() {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Marca</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsEquipos.Equipos.filter(e => e.Equipo === equipoData.equipo).map((option, index) => (
-                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option.Marca)} style={styles.modalOption}>
-                        <Text style={styles.modalOptionText}>{option.Marca}</Text>
+                    {options.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
@@ -678,55 +724,15 @@ export default function EquiposScreen() {
     return null;
   };
 
-  const renderModalContent = () => {
-    let options = [];
-    switch (currentField) {
-      case 'equipo':
-        options = optionsEquipos.Equipos.map(e => e.Equipo);
-        break;
-      case 'numeroInterno':
-        options = optionsEquipos.NuInterno;
-        break;
-      case 'estado':
-        options = optionsEquipos.Estado;
-        break;
-      case 'porcentajePetroleo':
-        options = optionsEquipos.Petroleo;
-        break;
-      case 'estandarPetroleo':
-        options = optionsEquipos.EstandarPetroleo;
-        break;
-      case 'adherenciaPetroleo':
-        options = optionsEquipos.AdherenciaPetroleo;
-        break;
-      case 'ubicacion':
-        options = optionsEquipos.Ubicacion;
-        break;
-      case 'estandarES':
-        options = optionsEquipos.EstandarES;
-        break;
-      case 'nivel':
-        options = optionsEquipos.Nivel;
-        break;
-      case 'report':
-        options = optionsEquipos.Report;
-        break;
-      case 'grupo':
-        options = optionsEquipos.Grupo;
-        break;
-      default:
-        options = [];
-    }
-    return (
-      <ScrollView style={styles.scrollview}>
-        {options.map((option, index) => (
-          <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
-            <Text style={styles.modalOptionText}>{option}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    );
-  };
+  const renderModalContent = () => (
+    <ScrollView style={styles.scrollview}>
+      {options.map((option, index) => (
+        <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+          <Text style={styles.modalOptionText}>{option}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
 
   return (
     <KeyboardAvoidingView

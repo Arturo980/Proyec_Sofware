@@ -2,15 +2,31 @@
   "Equipos": [
     {
       "Equipo": "Equipo1",
-      "Marca": "MarcaA"
+      "Marca": ["Marca A"]
     },
     {
       "Equipo": "Equipo2",
-      "Marca": "MarcaB"
+      "Marca": ["Marca B"]
     },
     {
       "Equipo": "Equipo3",
-      "Marca": "MarcaC"
+      "Marca": ["Marca C", "Marca D"]
+    },
+    {
+      "Equipo": "Equipo4",
+      "Marca": ["Marca A"]
+    },
+    {
+      "Equipo": "Equipo5",
+      "Marca": ["Marca B"]
+    },
+    {
+      "Equipo": "Equipo6",
+      "Marca": ["Marca C"]
+    },
+    {
+      "Equipo": "Equipo7",
+      "Marca": ["Marca A", "Marca B"]
     }
   ],
   "NuInterno": ["001", "002", "003"],
