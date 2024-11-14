@@ -274,6 +274,13 @@ export default function EquiposScreen() {
     );
   };
 
+  const deletePhoto = (index) => {
+    setEquipoData(prevState => {
+      const updatedPhotoUri = prevState.photoUri.filter((_, i) => i !== index);
+      return { ...prevState, photoUri: updatedPhotoUri };
+    });
+  };
+
   const renderHeader = () => (
     <>
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
@@ -606,13 +613,19 @@ export default function EquiposScreen() {
             <Text style={styles.buttonText}>Tomar Foto</Text>
           </TouchableOpacity>
           {equipoData.photoUri && equipoData.photoUri.length > 0 && (
-            equipoData.photoUri.map((uri, index) => (
-              <Image
-                key={index}
-                source={{ uri }}
-                style={{ width: 100, height: 100, marginBottom: 10 }}
-              />
-            ))
+            <ScrollView horizontal style={styles.photoPreviewContainer}>
+              {equipoData.photoUri.map((uri, index) => (
+                <View key={index} style={styles.photoWrapper}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.photoPreview}
+                  />
+                  <TouchableOpacity style={styles.deletePhotoButton} onPress={() => deletePhoto(index)}>
+                    <Text style={styles.deletePhotoButtonText}>X</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
           )}
 
           <TouchableOpacity style={styles.button} onPress={isUpdating ? handleUpdateEquipo : handleAddEquipo}>
@@ -938,5 +951,33 @@ const styles = StyleSheet.create({
   },
   deleteAllButtonMargin: {
     marginBottom: 20, // Add margin to create space
+  },
+  photoPreviewContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  photoWrapper: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  photoPreview: {
+    width: 100,
+    height: 100,
+  },
+  deletePhotoButton: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: 'red',
+    borderRadius: 50,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deletePhotoButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

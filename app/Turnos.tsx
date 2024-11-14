@@ -62,6 +62,13 @@ export default function TurnosScreen() {
     loadTurnos();
   }, []);
 
+  const handleDeletePhoto = (index) => {
+    setTurnoData(prevState => {
+      const updatedPhotoUri = prevState.photoUri.filter((_, i) => i !== index);
+      return { ...prevState, photoUri: updatedPhotoUri };
+    });
+  };
+
   const takePhoto = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -507,13 +514,22 @@ const handleDeleteAll = async () => {
             <Text style={styles.buttonText}>Tomar Foto</Text>
           </TouchableOpacity>
           {turnoData.photoUri && turnoData.photoUri.length > 0 && (
-            turnoData.photoUri.map((uri, index) => (
-              <Image
-                key={index}
-                source={{ uri }}
-                style={{ width: 100, height: 100, marginBottom: 10 }}
-              />
-            ))
+            <ScrollView horizontal={true} style={styles.photoPreviewContainer}>
+              {turnoData.photoUri.map((uri, index) => (
+                <View key={index} style={styles.photoWrapper}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.photoPreview}
+                  />
+                  <TouchableOpacity
+                    style={styles.deletePhotoButton}
+                    onPress={() => handleDeletePhoto(index)}
+                  >
+                    <Text style={styles.deletePhotoButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
           )}
   
           <TouchableOpacity style={styles.button} onPress={handleAddTurno}>
@@ -802,4 +818,40 @@ const styles = StyleSheet.create({
   deleteAllButton: {
     backgroundColor: '#FF6B6B', // Red color for the delete all button
   },
+  photoPreviewContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  photoPreview: {
+    width: 100,
+    height: 100,
+    marginRight: 10,
+  },
+  photoWrapper: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  deletePhotoButton: {
+    position: 'absolute',
+    top: 5,
+    left: 5,
+    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+    borderRadius: 15,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deletePhotoButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
 });
+
+const handleDeletePhoto = (index) => {
+  setTurnoData(prevState => {
+    const updatedPhotoUri = prevState.photoUri.filter((_, i) => i !== index);
+    return { ...prevState, photoUri: updatedPhotoUri };
+  });
+};
