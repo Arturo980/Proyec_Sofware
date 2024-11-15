@@ -73,6 +73,7 @@ export default function AdminTurnosScreen() {
               handleSaveOptions(newOptionsData);
               return newOptionsData;
             });
+            setCurrentField(''); // Reset currentField to ensure state updates correctly
           }
         }
       ]
@@ -91,13 +92,13 @@ export default function AdminTurnosScreen() {
     }
   };
 
-  const renderOption = ({ item, index }) => (
+  const renderOption = (field) => ({ item, index }) => (
     <View style={styles.optionRow}>
       <Text style={styles.optionText}>{item}</Text>
-      <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); }}>
+      <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField(field); }}>
         <Text style={styles.buttonText}>Editar</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
+      <TouchableOpacity style={styles.deleteButton} onPress={() => { setCurrentField(field); handleDeleteOption(index); }}>
         <Text style={styles.buttonText}>Eliminar</Text>
       </TouchableOpacity>
     </View>
@@ -113,7 +114,7 @@ export default function AdminTurnosScreen() {
             <Text style={styles.fieldTitle}>{field}</Text>
             <FlatList
               data={optionsData[field]}
-              renderItem={renderOption}
+              renderItem={renderOption(field)}
               keyExtractor={(item, index) => index.toString()}
             />
             <TextInput
