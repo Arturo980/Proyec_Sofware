@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions, ScrollView, Image } from 'react-native';
 import Svg, { Polygon, Image as SvgImage } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -100,61 +100,85 @@ export default function HomeScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Home</Text>
+      <View style={styles.navbar}>
+        <View style={styles.leftContainer}>
+          <Image source={require('@/assets/images/Minetrack2.png')} style={styles.image} />
+        </View>
+        <View style={styles.centerContainer}>
+          <Text style={styles.title}>Home</Text>
+        </View>
+      </View>
 
-      <Svg height={isTablet ? 400 : 300} width={isTablet ? 400 : 300} style={styles.hexagon}>
-        <Polygon
-          points="150,0 300,75 300,225 150,300 0,225 0,75"
-          fill="#F0A500"
-        />
-        <SvgImage
-          href={require('@/assets/images/minetrack.png')}
-          x={isTablet ? 75 : 50}
-          y={isTablet ? 50 : 25}
-          width={isTablet ? 250 : 200}
-          height={isTablet ? 250 : 200}
-          preserveAspectRatio="xMidYMid slice"
-        />
-      </Svg>
       <View style={styles.container}>
-        <Text style={styles.welcomeText}>Bienvenido {userName}</Text>
+        <Text style={styles.welcomeText}>Bienvenido {userName} 👋</Text>
       </View>
 
       <View style={styles.gridContainer}>
-            <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminTurnos')}>
-              <Text style={styles.cardText}>Administrador de Turnos</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminEquipos')}>
-              <Text style={styles.cardText}>Administrador de Equipos</Text>
-            </TouchableOpacity>
+        <View style={styles.cardWrapper}>
+          <Image source={require('@/assets/images/Turnos.png')} style={styles.cardImage} />
+          <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminTurnos')}>
+            <Text style={styles.cardText}>Administrador de Turnos</Text>
+          </TouchableOpacity>
+        </View>
 
+        <View style={styles.cardWrapper}>
+          <Image source={require('@/assets/images/equipo.png')} style={styles.cardImage} />
+          <TouchableOpacity style={styles.card} onPress={() => router.push('../AdminEquipos')}>
+            <Text style={styles.cardText}>Administrador de Equipos</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.exportButton} onPress={exportToJSON}>
           <Text style={styles.exportButtonText}>Exportar a JSON</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Salir</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Salir</Text>
-      </TouchableOpacity>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>© Todos los derechos reservados</Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  navbar: {   
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    width: '100%',
+  },
+  leftContainer: {
+    alignItems: 'flex-start',    
+  },
+  centerContainer: {
+    position: 'absolute',        
+    left: 0,                      
+    right: 0,                     
+    alignItems: 'center',
+  },
+  image: {
+    width: 60, 
+    height: 60,
+    marginRight: 10, 
+  },
+  title: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    color: '#fff', 
+  },
   container: {
     flexGrow: 1,
     backgroundColor: '#4E4E4E',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingTop: 40,
     paddingHorizontal: 20,
   },
   welcomeText: {
     color: '#fff',
-    fontSize: 30,
+    fontSize: 20,
     marginTop: 10,
-  },
-  hexagon: {
-    marginVertical: 20,
   },
   header: {
     fontSize: 24,
@@ -170,14 +194,25 @@ const styles = StyleSheet.create({
     width: '100%',
     marginVertical: 50,
   },
+  cardWrapper: {
+    alignItems: 'center',   
+    marginBottom: 20,      
+    width: '48%',          
+  },
   card: {
     backgroundColor: '#F0A500',
-    width: '48%',
+    width: '100%',         
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    marginBottom: 20,
+    marginTop: 10,        
+  },
+  cardImage: {
+    width: '100%',  
+    height: undefined,
+    aspectRatio: 1.8,
+    resizeMode: 'contain',
   },
   cardText: {
     fontSize: 30,
@@ -191,7 +226,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignItems: 'center',
     width: '100%',
-    marginBottom: 40,
+    marginBottom: 20,
   },
   exportButtonText: {
     color: '#fff',
@@ -202,15 +237,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'red',
     padding: 15,
     borderRadius: 5,
-    marginTop: 20,
     alignItems: 'center',
-    width: '80%',
-    position: 'absolute',
-    bottom: 20,
+    width: '100%',
+    marginBottom: 20,
   },
   logoutButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 1,
+    width: '100%',
+    marginTop: 100,
+    paddingHorizontal: 10,
+  },
+  footerText: {
+    color: '#fff',
+    fontSize: 12,
   },
 });
