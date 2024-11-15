@@ -34,6 +34,7 @@ export default function TurnosScreen() {
   const [currentPickerField, setCurrentPickerField] = useState(null);
   const router = useRouter();
   const isTablet = width >= 768;
+  const [optionsTurnosState, setOptionsTurnosState] = useState(optionsTurnos);
 
 
   useEffect(() => {
@@ -58,8 +59,22 @@ export default function TurnosScreen() {
       }
     };
 
+    const loadOptionsTurnos = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('optionsTurnos');
+        if (jsonValue != null) {
+          setOptionsTurnosState(JSON.parse(jsonValue));
+        } else {
+          setOptionsTurnosState(optionsTurnos);
+        }
+      } catch (e) {
+        console.error("Error loading optionsTurnos", e);
+      }
+    };
+
     loadUserName();
     loadTurnos();
+    loadOptionsTurnos();
   }, []);
 
   const handleDeletePhoto = (index) => {
@@ -338,7 +353,7 @@ const handleDeleteAll = async () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Turno Saliente</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsTurnos.turnoSaliente.map((option, index) => (
+                    {optionsTurnosState.turnoSaliente.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
@@ -363,7 +378,7 @@ const handleDeleteAll = async () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Nombre Saliente</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsTurnos.nombreSaliente.map((option, index) => (
+                    {optionsTurnosState.nombreSaliente.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
@@ -388,7 +403,7 @@ const handleDeleteAll = async () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Grupo Saliente</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsTurnos.grupoSaliente.map((option, index) => (
+                    {optionsTurnosState.grupoSaliente.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
@@ -413,7 +428,7 @@ const handleDeleteAll = async () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Postura</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsTurnos.postura.map((option, index) => (
+                    {optionsTurnosState.postura.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
@@ -438,7 +453,7 @@ const handleDeleteAll = async () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Estatus Final</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsTurnos.estatusFinal.map((option, index) => (
+                    {optionsTurnosState.estatusFinal.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
@@ -463,7 +478,7 @@ const handleDeleteAll = async () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Estatus Real</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsTurnos.estatusReal.map((option, index) => (
+                    {optionsTurnosState.estatusReal.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
@@ -487,7 +502,7 @@ const handleDeleteAll = async () => {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Adherencia</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsTurnos.adherencia.map((option, index) => (
+                    {optionsTurnosState.adherencia.map((option, index) => (
                       <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
                         <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
