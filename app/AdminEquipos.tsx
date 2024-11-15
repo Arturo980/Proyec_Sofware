@@ -1,301 +1,278 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import optionsEquipos from './Jsons/optionsEquipos.json';
 
-export default function EquiposScreen() {
-  const [equipoData, setEquipoData] = useState({
-    equipo: '',
-    marca: '',
-    numeroInterno: '',
-    operador: '',
-    estado: '',
-    porcentajePetroleo: '',
-    observacion: '',
-    NombreRegistrante: '',
-  });
-
-  const [equipos, setEquipos] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updateIndex, setUpdateIndex] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(null);
+export default function AdminEquiposScreen() {
+  const [optionsData, setOptionsData] = useState({});
+  const [currentField, setCurrentField] = useState('');
+  const [newOption, setNewOption] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editOption, setEditOption] = useState('');
+  const [newEquipo, setNewEquipo] = useState('');
+  const [newMarca, setNewMarca] = useState('');
+  const [isAddEquipoModalVisible, setIsAddEquipoModalVisible] = useState(false);
+  const [isMarcaModalVisible, setIsMarcaModalVisible] = useState(false);
 
   useEffect(() => {
-    const loadUserName = async () => {
+    const loadOptionsData = async () => {
       try {
-        const NombreRegistrante = await AsyncStorage.getItem('userName');
-        if (NombreRegistrante != null) {
-          setEquipoData(prevState => ({ ...prevState, NombreRegistrante }));
+        const jsonValue = await AsyncStorage.getItem('optionsEquipos');
+        if (jsonValue != null) {
+          setOptionsData(JSON.parse(jsonValue));
+        } else {
+          setOptionsData(optionsEquipos);
         }
       } catch (e) {
-        console.error("Error loading userName", e);
+        console.error("Error loading optionsEquipos", e);
       }
     };
-    loadUserName();
+    loadOptionsData();
   }, []);
 
-  const loadEquipos = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem('equipos');
-      if (jsonValue != null) {
-        setEquipos(JSON.parse(jsonValue));
-      }
-    } catch (e) {
-      console.error("Error loading equipos", e);
-    }
+  const handleAddOption = () => {
+    if (newOption.trim() === '') return;
+    setOptionsData(prevState => {
+      const updatedOptions = {
+        ...prevState,
+        [currentField]: prevState[currentField] ? [...prevState[currentField], newOption] : [newOption]
+      };
+      handleSaveOptions(updatedOptions); // Save options after adding a new option
+      return updatedOptions;
+    });
+    setNewOption('');
+    setCurrentField(''); // Reset current field to ensure re-render
   };
-
-  const saveEquipos = async (newEquipos) => {
-    try {
-      const jsonValue = JSON.stringify(newEquipos);
-      await AsyncStorage.setItem('equipos', jsonValue);
-    } catch (e) {
-      console.error("Error saving equipos", e);
-    }
-  };
-
-  useEffect(() => {
-    loadEquipos();
-  }, []);
 
   const handleAddEquipo = () => {
-    const newEquipo = { ...equipoData };
-    const updatedEquipos = [...equipos, newEquipo];
-    setEquipos(updatedEquipos);
-    saveEquipos(updatedEquipos);
-    setShowForm(false);
-    resetForm();
-  };
-
-  const handleUpdateEquipo = () => {
-    const updatedEquipos = equipos.map((equipo, index) => 
-      index === updateIndex ? equipoData : equipo
-    );
-    setEquipos(updatedEquipos);
-    saveEquipos(updatedEquipos);
-    setShowForm(false);
-    resetForm();
-    setIsUpdating(false);
-    setUpdateIndex(null);
-  };
-
-  const resetForm = () => {
-    setEquipoData({
-      equipo: '',
-      marca: '',
-      numeroInterno: '',
-      operador: '',
-      estado: '',
-      porcentajePetroleo: '',
-      observacion: '',
-      NombreRegistrante: '',
+    if (newEquipo.trim() === '' || newMarca.trim() === '') return;
+    setOptionsData(prevState => {
+      const updatedOptions = {
+        ...prevState,
+        Equipos: [...prevState.Equipos, { Equipo: newEquipo, Marca: [newMarca] }]
+      };
+      handleSaveOptions(updatedOptions); // Save options after adding a new equipo
+      return updatedOptions;
     });
+    setNewEquipo('');
+    setNewMarca('');
+    setIsAddEquipoModalVisible(false);
   };
 
-  const handleDeleteEquipo = (index) => {
+  const handleEditOption = () => {
+    if (editOption.trim() === '') return;
+    setOptionsData(prevState => {
+      const updatedOptions = [...prevState[currentField]];
+      updatedOptions[editIndex] = editOption;
+      const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+      handleSaveOptions(newOptionsData); // Save options after editing an option
+      return newOptionsData;
+    });
+    setEditOption('');
+    setEditIndex(null);
+    setIsModalVisible(false);
+  };
+
+  const handleDeleteOption = (index) => {
     Alert.alert(
-      'Eliminar Equipo',
-      '¿Estás seguro de que deseas eliminar este equipo?',
+      'Eliminar Opción',
+      '¿Estás seguro de que deseas eliminar esta opción?',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
           onPress: () => {
-            const updatedEquipos = equipos.filter((_, i) => i !== index);
-            setEquipos(updatedEquipos);
-            saveEquipos(updatedEquipos);
-          },
-        },
-      ],
-      { cancelable: true }
+            setOptionsData(prevState => {
+              const updatedOptions = [...prevState[currentField]];
+              updatedOptions.splice(index, 1);
+              const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+              handleSaveOptions(newOptionsData); // Save options after deleting an option
+              return newOptionsData;
+            });
+          }
+        }
+      ]
     );
   };
 
-  const handleDeleteAllEquipos = () => {
-    Alert.alert(
-      'Eliminar Todos los Equipos',
-      '¿Estás seguro de que deseas eliminar todos los equipos?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar Todos',
-          onPress: () => {
-            setEquipos([]);
-            saveEquipos([]);
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+  const handleSaveOptions = async (optionsDataToSave) => {
+    if (!optionsDataToSave) return;
+    try {
+      await AsyncStorage.setItem('optionsEquipos', JSON.stringify(optionsDataToSave));
+      Alert.alert('Guardado', 'Las opciones se han guardado correctamente.');
+    } catch (e) {
+      console.error("Error saving options", e);
+      Alert.alert('Error', 'Hubo un problema al guardar las opciones.');
+    }
   };
 
-  const handleEditEquipo = (index) => {
-    setEquipoData(equipos[index]);
-    setShowForm(true);
-    setIsUpdating(true);
-    setUpdateIndex(index);
+  const handleOpenAddEquipoModal = () => {
+    setIsAddEquipoModalVisible(true);
   };
 
-  const openModal = (index) => {
-    setSelectedIndex(index);
-    setModalVisible(true);
+  const handleCloseAddEquipoModal = () => {
+    setIsAddEquipoModalVisible(false);
   };
 
-  const renderHeader = () => (
-    <>
-      <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
-        <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Equipo"}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, styles.deleteAllButton]} onPress={handleDeleteAllEquipos}>
-        <Text style={styles.buttonText}>Eliminar Todos los Equipos</Text>
-      </TouchableOpacity>
-      {showForm && (
-        <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Equipo"
-            style={styles.input}
-            value={equipoData.equipo}
-            onChangeText={(text) => setEquipoData({ ...equipoData, equipo: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="Marca"
-            style={styles.input}
-            value={equipoData.marca}
-            onChangeText={(text) => setEquipoData({ ...equipoData, marca: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="Número Interno"
-            style={styles.input}
-            value={equipoData.numeroInterno}
-            onChangeText={(text) => setEquipoData({ ...equipoData, numeroInterno: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="Operador"
-            style={styles.input}
-            value={equipoData.operador}
-            onChangeText={(text) => setEquipoData({ ...equipoData, operador: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="Estado"
-            style={styles.input}
-            value={equipoData.estado}
-            onChangeText={(text) => setEquipoData({ ...equipoData, estado: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="% Petróleo"
-            style={styles.input}
-            value={equipoData.porcentajePetroleo}
-            onChangeText={(text) => setEquipoData({ ...equipoData, porcentajePetroleo: text })}
-            placeholderTextColor="#888"
-          />
-          <TextInput
-            placeholder="Observación"
-            style={styles.input}
-            value={equipoData.observacion}
-            onChangeText={(text) => setEquipoData({ ...equipoData, observacion: text })}
-            placeholderTextColor="#888"
-          />
-          <TouchableOpacity style={styles.button} onPress={isUpdating ? handleUpdateEquipo : handleAddEquipo}>
-            <Text style={styles.buttonText}>{isUpdating ? "Actualizar Equipo" : "Agregar Equipo"}</Text>
+  const handleOpenMarcaModal = () => {
+    setIsMarcaModalVisible(true);
+  };
+
+  const handleCloseMarcaModal = () => {
+    setIsMarcaModalVisible(false);
+  };
+
+  const handleSelectMarca = (marca) => {
+    setNewMarca(marca);
+    setIsMarcaModalVisible(false);
+  };
+
+  const renderOption = ({ item, index }) => {
+    if (typeof item === 'object') {
+      return (
+        <View key={index} style={styles.optionRow}>
+          <Text style={styles.optionText}>{`${item.Equipo}, ${item.Marca.join(', ')}`}</Text>
+          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); }}>
+            <Text style={styles.buttonText}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
+            <Text style={styles.buttonText}>Eliminar</Text>
           </TouchableOpacity>
         </View>
-      )}
-    </>
-  );
-
-  const renderItem = ({ item, index }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.equipo}</Text>
-      <Text style={styles.cell}>{item.marca}</Text>
-      <Text style={styles.cell}>{item.numeroInterno}</Text>
-      <Text style={styles.cell}>{item.operador}</Text>
-      <Text style={styles.cell}>{item.estado}</Text>
-      <Text style={styles.cell}>{item.porcentajePetroleo}</Text>
-      <Text style={styles.cell}>{item.observacion}</Text>
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.actionButton, styles.optionsButton]} onPress={() => openModal(index)}>
-          <Text style={styles.actionText}>Opciones</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const renderSectionHeader = ({ section: { title } }) => {
-    if (title === 'Equipos') {
+      );
+    } else {
       return (
-        <View style={styles.headerRow}>
-          <Text style={styles.headerCell}>Equipo</Text>
-          <Text style={styles.headerCell}>Marca</Text>
-          <Text style={styles.headerCell}>Número Interno</Text>
-          <Text style={styles.headerCell}>Operador</Text>
-          <Text style={styles.headerCell}>Estado</Text>
-          <Text style={styles.headerCell}>% Petróleo</Text>
-          <Text style={styles.headerCell}>Observación</Text>
-          <Text style={styles.headerCell}>Acciones</Text>
+        <View style={styles.optionRow}>
+          <Text style={styles.optionText}>{item}</Text>
+          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); }}>
+            <Text style={styles.buttonText}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
+            <Text style={styles.buttonText}>Eliminar</Text>
+          </TouchableOpacity>
         </View>
       );
     }
-    return null;
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <SectionList
-        sections={[
-          { title: 'Formulario', data: [{}], renderItem: renderHeader },
-          { title: 'Equipos', data: equipos, renderItem: renderItem }
-        ]}
+    <View style={styles.container}>
+      <Text style={styles.header}>Administrar Opciones</Text>
+      <FlatList
+        data={Object.keys(optionsData).filter(field => optionsData[field] && optionsData[field].length > 0)} // Ensure fields are not empty
+        renderItem={({ item: field, index }) => (
+          <View key={index} style={styles.fieldContainer}>
+            <Text style={styles.fieldTitle}>{field}</Text>
+            <FlatList
+              data={optionsData[field]}
+              renderItem={renderOption}
+              keyExtractor={(item, index) => index.toString()}
+            />
+            {field === 'Equipos' ? (
+              <>
+                <View style={styles.addButtonContainer}>
+                  <TouchableOpacity style={styles.addButton} onPress={handleOpenAddEquipoModal}>
+                    <Text style={styles.buttonText}>Agregar</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <TextInput
+                  placeholder={`Agregar nueva opción a ${field}`}
+                  style={styles.input}
+                  value={currentField === field ? newOption : ''}
+                  onChangeText={setNewOption}
+                  placeholderTextColor="#888"
+                  onFocus={() => setCurrentField(field)}
+                />
+                <View style={styles.addButtonContainer}>
+                  <TouchableOpacity style={styles.addButton} onPress={handleAddOption}>
+                    <Text style={styles.buttonText}>Agregar</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        )}
         keyExtractor={(item, index) => index.toString()}
-        ListEmptyComponent={<Text style={styles.noDataText}>No hay equipos registrados.</Text>}
-        renderSectionHeader={renderSectionHeader}
-        style={styles.list}
       />
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
+      <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions(optionsData)}>
+        <Text style={styles.buttonText}>Guardar Cambios</Text>
+      </TouchableOpacity>
+      <Modal transparent={true} animationType="slide" visible={isModalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Opciones</Text>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.updateButton]}
-              onPress={() => {
-                handleEditEquipo(selectedIndex);
-                setModalVisible(false);
-              }}
-            >
-              <Text style={styles.modalButtonText}>Actualizar Equipo</Text>
+            <Text style={styles.modalText}>Editar Opción</Text>
+            <TextInput
+              style={styles.input}
+              value={editOption}
+              onChangeText={setEditOption}
+              placeholderTextColor="#888"
+            />
+            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption}>
+              <Text style={styles.buttonText}>Guardar</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.deleteButton]}
-              onPress={() => {
-                handleDeleteEquipo(selectedIndex);
-                setModalVisible(false);
-              }}
-            >
-              <Text style={styles.modalButtonText}>Eliminar Equipo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.cancelButton]}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Cancelar</Text>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setIsModalVisible(false)}>
+              <Text style={styles.buttonText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+      <Modal transparent={true} animationType="slide" visible={isAddEquipoModalVisible}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Agregar Equipo</Text>
+            <TextInput
+              placeholder="Nombre del Equipo"
+              style={styles.input}
+              value={newEquipo}
+              onChangeText={setNewEquipo}
+              placeholderTextColor="#888"
+            />
+            <TouchableOpacity style={styles.input} onPress={handleOpenMarcaModal}>
+              <Text style={{ color: newMarca ? '#000' : '#888' }}>{newMarca || 'Seleccionar o agregar Marca'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.saveButton} onPress={handleAddEquipo}>
+              <Text style={styles.buttonText}>Agregar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCloseAddEquipoModal}>
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Modal transparent={true} animationType="slide" visible={isMarcaModalVisible}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Seleccionar o Agregar Marca</Text>
+            <FlatList
+              data={[...new Set(optionsData.Equipos?.flatMap(e => e.Marca) || [])]}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.modalOption} onPress={() => handleSelectMarca(item)}>
+                  <Text style={styles.modalOptionText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              keyExtractor={(item, index) => index.toString()}
+            />
+            <TextInput
+              placeholder="Agregar nueva Marca"
+              style={styles.input}
+              value={newMarca}
+              onChangeText={setNewMarca}
+              placeholderTextColor="#888"
+            />
+            <TouchableOpacity style={styles.saveButton} onPress={handleCloseMarcaModal}>
+              <Text style={styles.buttonText}>Aceptar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCloseMarcaModal}>
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
@@ -311,17 +288,51 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#fff',
   },
+  fieldContainer: {
+    marginBottom: 20,
+  },
+  fieldTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
   input: {
     width: '100%',
     padding: 15,
     backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
-  formContainer: {
-    marginBottom: 20,
+  addButton: {
+    backgroundColor: '#F0A500',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  row: {
+  saveButton: {
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#A9A9A9',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  optionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
@@ -329,70 +340,23 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     backgroundColor: '#fff',
   },
-  cell: {
+  optionText: {
     flex: 1,
     textAlign: 'center',
   },
-  tableContainer: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  tableHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000',
-    backgroundColor: '#fff',
-  },
-  headerCell: {
-    flex: 1,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: '#F0A500',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  deleteAllButton: {
-    backgroundColor: '#FF6B6B',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-  },
-  actionButton: {
+  editButton: {
+    backgroundColor: '#1E90FF',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
     marginHorizontal: 5,
   },
-  optionsButton: {
-    backgroundColor: '#A9A9A9',
-  },
-  actionText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  noDataText: {
-    textAlign: 'center',
-    color: 'gray',
-    marginVertical: 20,
+  deleteButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginHorizontal: 5,
   },
   modalContainer: {
     flex: 1,
@@ -412,24 +376,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  modalButton: {
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
+  addButtonContainer: {
+    marginTop: 20, // Add margin to create space
+  },
+  modalOption: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    borderRadius: 10,
     marginVertical: 5,
-    width: '100%',
+    backgroundColor: '#f0f0f0',
   },
-  updateButton: {
-    backgroundColor: '#1E90FF',
-  },
-  deleteButton: {
-    backgroundColor: '#FF6B6B',
-  },
-  cancelButton: {
-    backgroundColor: '#A9A9A9',
-  },
-  modalButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  modalOptionText: {
+    fontSize: 18,
+    textAlign: 'center',
   },
 });

@@ -1,446 +1,161 @@
 import React, { useState, useEffect } from 'react';
-import { Dimensions, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, SectionList, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import optionsTurnos from './Jsons/optionsTurnos.json';
-import { Picker } from '@react-native-picker/picker';
-import * as FileSystem from 'expo-file-system';
-import ImageViewer from 'react-native-image-zoom-viewer';
-import { useRouter } from 'expo-router';
 
-export default function TurnosScreen() {
-  const [turnoData, setTurnoData] = useState({
-    turnoSaliente: '',
-    nombreSaliente: '',
-    grupoSaliente: '',
-    postura: '',
-    estatusFinal: '',
-    estatusReal: '',
-    observacion: '',
-    NombreRegistrante: '',
-    photoUri: [],  // Cambiado para manejar múltiples fotos
-  });
-  const [turnos, setTurnos] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isAdding, setIsAdding] = useState(true);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [photoModalVisible, setPhotoModalVisible] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  const [pickerVisible, setPickerVisible] = useState(false);
-  const { width } = Dimensions.get('window');
-  const [currentPickerField, setCurrentPickerField] = useState(null);
-  const router = useRouter();
-  const isTablet = width >= 768;
+export default function AdminTurnosScreen() {
+  const [optionsData, setOptionsData] = useState({});
+  const [currentField, setCurrentField] = useState('');
+  const [newOption, setNewOption] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editOption, setEditOption] = useState('');
 
   useEffect(() => {
-    const loadUserName = async () => {
+    const loadOptionsData = async () => {
       try {
-        const NombreRegistrante = await AsyncStorage.getItem('userName');
-        if (NombreRegistrante != null) {
-          setTurnoData(prevState => ({ ...prevState, NombreRegistrante }));
+        const jsonValue = await AsyncStorage.getItem('optionsTurnos');
+        if (jsonValue != null) {
+          setOptionsData(JSON.parse(jsonValue));
+        } else {
+          setOptionsData(optionsTurnos);
         }
       } catch (e) {
-        console.error("Error loading userName", e);
+        console.error("Error loading optionsTurnos", e);
+        setOptionsData(optionsTurnos); // Ensure optionsData is set even if there's an error
       }
     };
-
-    const loadTurnos = async () => {
-      try {
-        const storedTurnos = await AsyncStorage.getItem('turnos');
-        if (storedTurnos) {
-          setTurnos(JSON.parse(storedTurnos));
-        }
-      } catch (e) {
-        console.error("Error loading turnos", e);
-      }
-    };
-
-    loadUserName();
-    loadTurnos();
+    loadOptionsData();
   }, []);
 
-  const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Se requiere permiso para acceder a la cámara.');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync();
-      console.log('Result:', result); 
-
-      if (result.cancelled) {
-        alert('La toma de la foto fue cancelada.');
-        return;
-      }
-
-      if (!result.assets || !result.assets[0].uri) {
-        alert('No se pudo obtener la URI de la foto.');
-        return;
-      }
-
-      const fileName = result.assets[0].uri.split('/').pop();
-      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
-      console.log('File URI:', fileUri); 
-
-      await FileSystem.moveAsync({
-        from: result.assets[0].uri,
-        to: fileUri,
-      });
-
-      // Agregar la foto al array de photosUri
-      setTurnoData(prevState => ({
+  const handleAddOption = () => {
+    if (newOption.trim() === '' || !currentField) return;
+    setOptionsData(prevState => {
+      const updatedOptions = {
         ...prevState,
-        photoUri: [...prevState.photoUri, fileUri], // Agregar una nueva foto
-      }));
-
-      Alert.alert('Foto Agregada', 'La foto se ha agregado correctamente.');
-    } catch (error) {
-      console.error("Error taking photo", error);
-      Alert.alert('Error', 'Hubo un problema al tomar la foto.');
-    }
-  };
-
-  const handleAddTurno = async () => {
-    setIsAdding(true)
-    setIsEditing(false);
-    const newTurno = {
-      fecha: new Date().toLocaleDateString('es-ES'),
-      ...turnoData,
-    };
-    let updatedTurnos;
-    if (isEditing) {
-      updatedTurnos = [...turnos];
-      updatedTurnos[editingIndex] = newTurno;
-      setIsEditing(false);
-      setEditingIndex(null);
-    } else {
-      updatedTurnos = [newTurno, ...turnos];
-    }
-    setTurnos(updatedTurnos);
-    await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-    setShowForm(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setTurnoData({
-      turnoSaliente: '',
-      nombreSaliente: '',
-      grupoSaliente: '',
-      postura: '',
-      estatusFinal: '',
-      estatusReal: '',
-      observacion: '',
-      NombreRegistrante: '',
-      photoUri: [],  // Resetear a arreglo vacío
+        [currentField]: prevState[currentField] ? [...prevState[currentField], newOption] : [newOption]
+      };
+      handleSaveOptions(updatedOptions);
+      return updatedOptions;
     });
+    setNewOption('');
+    setCurrentField('');
   };
 
-  const handleViewPhoto = (index) => {
-    const turno = turnos[index];
-    if (turno && turno.photoUri && turno.photoUri.length > 0) {
-      console.log("Navigating to PhotoViewerScreen with photoUris:", turno.photoUri);  
-      router.push({
-        pathname: '/PhotoViewerScreen',
-        params: { photoUris: turno.photoUri },  // Pasar el arreglo de fotos
-      });
-    } else {
-      console.log("No photos found for turno:", turno);  
-      Alert.alert('No hay fotos disponibles', 'Por favor, toma una foto primero.');
-    }
+  const handleEditOption = () => {
+    if (editOption.trim() === '' || !currentField) return;
+    setOptionsData(prevState => {
+      const updatedOptions = [...prevState[currentField]];
+      updatedOptions[editIndex] = editOption;
+      const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+      handleSaveOptions(newOptionsData);
+      return newOptionsData;
+    });
+    setEditOption('');
+    setEditIndex(null);
+    setIsModalVisible(false);
   };
 
-  
-  const handlePickerOpen = (field) => {
-    setCurrentPickerField(field);
-    setPickerVisible(true);
-  };
-
-  const handleFieldFocus = (field) => {
-    setCurrentPickerField(field);
-    setPickerVisible(true);
-  };
-
-  const handlePickerChange = (itemValue) => {
-    setTurnoData((prevData) => ({ ...prevData, [currentPickerField]: itemValue }));
-    setPickerVisible(false);
-  };
-
-  const handleDeleteTurno = (index) => {
+  const handleDeleteOption = (index) => {
+    if (!currentField) return;
     Alert.alert(
-      'Eliminar Turno',
-      '¿Estás seguro de que deseas eliminar este turno?',
+      'Eliminar Opción',
+      '¿Estás seguro de que deseas eliminar esta opción?',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
-          onPress: async () => {
-            const updatedTurnos = turnos.filter((_, i) => i !== index);
-            setTurnos(updatedTurnos);
-            await AsyncStorage.setItem('turnos', JSON.stringify(updatedTurnos));
-            setModalVisible(false);
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-  const handleDeleteAll = async () => {
-    Alert.alert(
-      'Eliminar Todos los Turnos',
-      '¿Estás seguro de que deseas eliminar todos los turnos?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar Todo',
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem('turnos');
-              setTurnos([]);
-            } catch (e) {
-              console.error("Error deleting all turnos", e);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
+          onPress: () => {
+            setOptionsData(prevState => {
+              const updatedOptions = [...prevState[currentField]];
+              updatedOptions.splice(index, 1);
+              const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+              handleSaveOptions(newOptionsData);
+              return newOptionsData;
+            });
+          }
+        }
+      ]
     );
   };
 
-  const handleEditTurno = (index) => {
-    setTurnoData(turnos[index]);
-    setShowForm(true);
-    setIsEditing(true);
-    setEditingIndex(index);
-    setModalVisible(false);
-    setIsAdding(false);
+  const handleSaveOptions = async (optionsDataToSave) => {
+    if (!optionsDataToSave) return;
+    try {
+      await AsyncStorage.setItem('optionsTurnos', JSON.stringify(optionsDataToSave));
+      setOptionsData(optionsDataToSave); // Ensure state is updated after saving
+      Alert.alert('Guardado', 'Las opciones se han guardado correctamente.');
+    } catch (e) {
+      console.error("Error saving options", e);
+      Alert.alert('Error', 'Hubo un problema al guardar las opciones.');
+    }
   };
-  const renderItem = ({ item, index }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.fecha}</Text>
-      <Text style={styles.cell}>{item.turnoSaliente}</Text>
-      <Text style={styles.cell}>{item.nombreSaliente}</Text>
-      <Text style={styles.cell}>{item.grupoSaliente}</Text>
-      <Text style={styles.cell}>{item.postura}</Text>
-      <Text style={styles.cell}>{item.estatusFinal}</Text>
-      <Text style={styles.cell}>{item.estatusReal}</Text>
-      <Text style={styles.cell}>{item.observacion}</Text>
-      <TouchableOpacity style={styles.grayButton} onPress={() => { setSelectedIndex(index); setModalVisible(true); }}>
-        <Text style={styles.buttongtext}>Opciones</Text>
+
+  const renderOption = ({ item, index }) => (
+    <View style={styles.optionRow}>
+      <Text style={styles.optionText}>{item}</Text>
+      <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); }}>
+        <Text style={styles.buttonText}>Editar</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
+        <Text style={styles.buttonText}>Eliminar</Text>
       </TouchableOpacity>
     </View>
   );
 
-  const renderHeader = () => (
-    <>
-      <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
-        <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
-        <Text style={styles.buttonText}>Eliminar Todo</Text>
-      </TouchableOpacity>
-
-      {showForm && (
-        <View style={styles.formContainer}>
-          <TouchableOpacity onPress={() => handleFieldFocus('turnoSaliente')}>
-            <Text style={styles.input} editable={isAdding}>{turnoData.turnoSaliente || "Turno Saliente"}</Text>
-          </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'turnoSaliente' && isAdding && (
-            <Picker
-              selectedValue={turnoData.turnoSaliente}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'turnoSaliente')}
-            >
-              {optionsTurnos.turnoSaliente.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
-          )}
-
-          <TouchableOpacity onPress={() => handleFieldFocus('nombreSaliente')}>
-            <Text style={styles.input} editable={isAdding}>{turnoData.nombreSaliente || "Nombre Saliente"}</Text>
-          </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'nombreSaliente' && isAdding && (
-            <Picker
-              selectedValue={turnoData.nombreSaliente}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'nombreSaliente')}
-            >
-              {optionsTurnos.nombreSaliente.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
-          )}
-
-          <TouchableOpacity onPress={() => handleFieldFocus('grupoSaliente')}>
-            <Text style={styles.input} editable={isAdding}>{turnoData.grupoSaliente || "Grupo Saliente"}</Text>
-          </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'grupoSaliente' && isAdding && (
-            <Picker
-              selectedValue={turnoData.grupoSaliente}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'grupoSaliente')}
-            >
-              {optionsTurnos.grupoSaliente.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
-          )}
-
-          <TouchableOpacity onPress={() => handleFieldFocus('postura')}>
-            <Text style={styles.input} editable={isAdding}>{turnoData.postura || "Postura"}</Text>
-          </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'postura' && isAdding && (
-            <Picker
-              selectedValue={turnoData.postura}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'postura')}
-            >
-              {optionsTurnos.postura.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
-          )}
-
-          <TouchableOpacity onPress={() => handleFieldFocus('estatusFinal')}>
-            <Text style={styles.input} editable={!isAdding}>{turnoData.estatusFinal || "Estatus Final Reportado"}</Text>
-          </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'estatusFinal' && isAdding && (
-            <Picker
-              selectedValue={turnoData.estatusFinal}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'estatusFinal')}
-            >
-              {optionsTurnos.estatusFinal.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
-          )}
-
-          <TouchableOpacity onPress={() => handleFieldFocus('estatusReal')}>
-            <Text style={styles.input} editable={isAdding}>{turnoData.estatusReal || "Selecciona Estatus Real"}</Text>
-          </TouchableOpacity>
-          {pickerVisible && currentPickerField === 'estatusReal' && isEditing && (
-            <Picker
-              selectedValue={turnoData.estatusReal}
-              onValueChange={(itemValue) => handlePickerChange(itemValue, 'estatusReal')}
-            >
-              {optionsTurnos.estatusReal.map((option, index) => (
-                <Picker.Item key={index} label={option} value={option} />
-              ))}
-            </Picker>
-          )}
-
-          <TextInput
-            placeholder="Observación"
-            style={styles.input}
-            editable={isAdding}
-            placeholderTextColor="#888"
-            value={turnoData.observacion}
-            onChangeText={(text) => setTurnoData({ ...turnoData, observacion: text })}
-          />
-          <TouchableOpacity style={styles.button} onPress={takePhoto}>
-            <Text style={styles.buttonText}>Tomar Foto</Text>
-          </TouchableOpacity>
-          {turnoData.photoUri && turnoData.photoUri.length > 0 && (
-  turnoData.photoUri.map((uri, index) => (
-    <Image
-      key={index}
-      source={{ uri }}
-      style={{ width: 100, height: 100, marginBottom: 10 }}
-    />
-  ))
-)}
-
-
-          <TouchableOpacity style={styles.button} onPress={handleAddTurno}>
-            <Text style={styles.buttonText}>{isEditing ? "Actualizar Turno" : "Agregar Turno"}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <View style={styles.tableContainer}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerCell}>Fecha</Text>
-          <Text style={styles.headerCell}>Turno Saliente</Text>
-          <Text style={styles.headerCell}>Nombre Saliente</Text>
-          <Text style={styles.headerCell}>Grupo Saliente</Text>
-          <Text style={styles.headerCell}>Postura</Text>
-          <Text style={styles.headerCell}>Estatus Final</Text>
-          <Text style={styles.headerCell}>Estatus Real</Text>
-          <Text style={styles.headerCell}>Observación</Text>
-          <Text style={styles.headerCell}>Acción</Text>
-        </View>
-      </View>
-    </>
-  );
-
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <SectionList
-        sections={[
-          { title: 'Formulario', data: [{}], renderItem: renderHeader },
-          { title: 'Turnos', data: turnos, renderItem: renderItem }
-        ]}
+    <View style={styles.container}>
+      <Text style={styles.header}>Administrar Turnos</Text>
+      <FlatList
+        data={Object.keys(optionsData).filter(field => optionsData[field] && optionsData[field].length > 0)}
+        renderItem={({ item: field, index }) => (
+          <View key={index} style={styles.fieldContainer}>
+            <Text style={styles.fieldTitle}>{field}</Text>
+            <FlatList
+              data={optionsData[field]}
+              renderItem={renderOption}
+              keyExtractor={(item, index) => index.toString()}
+            />
+            <TextInput
+              placeholder={`Agregar nueva opción a ${field}`}
+              style={styles.input}
+              value={currentField === field ? newOption : ''}
+              onChangeText={setNewOption}
+              placeholderTextColor="#888"
+              onFocus={() => setCurrentField(field)}
+            />
+            <View style={styles.addButtonContainer}>
+              <TouchableOpacity style={styles.addButton} onPress={handleAddOption}>
+                <Text style={styles.buttonText}>Agregar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
         keyExtractor={(item, index) => index.toString()}
-        ListEmptyComponent={<Text style={styles.noDataText}>No hay turnos registrados.</Text>}
-        style={styles.list}
       />
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
+      <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions(optionsData)}>
+        <Text style={styles.buttonText}>Guardar Cambios</Text>
+      </TouchableOpacity>
+      <Modal transparent={true} animationType="slide" visible={isModalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Opciones</Text>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.updateButton]}
-              onPress={() => handleEditTurno(selectedIndex)}
-            >
-              <Text style={styles.modalButtonText}>Actualizar Turno</Text>
+            <Text style={styles.modalText}>Editar Opción</Text>
+            <TextInput
+              style={styles.input}
+              value={editOption}
+              onChangeText={setEditOption}
+              placeholderTextColor="#888"
+            />
+            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption}>
+              <Text style={styles.buttonText}>Guardar</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.deleteButton]}
-              onPress={() => handleDeleteTurno(selectedIndex)}
-            >
-              <Text style={styles.modalButtonText}>Eliminar Turno</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.viewButton]}
-              onPress={() => handleViewPhoto(selectedIndex)}
-            >
-              <Text style={styles.modalButtonText}>Ver Foto</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.cancelButton]}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Cancelar</Text>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setIsModalVisible(false)}>
+              <Text style={styles.buttonText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      <Modal
-        visible={photoModalVisible}
-        transparent={true}
-        onRequestClose={() => setPhotoModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <ImageViewer
-            imageUrls={[{ url: turnos[selectedIndex]?.photoUri }]}
-            enableSwipeDown={true}
-            onSwipeDown={() => setPhotoModalVisible(false)}
-          />
-        </View>
-      </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -450,25 +165,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#4E4E4E',
     padding: 20,
   },
-  grayButton: {
-    backgroundColor: '#A9A9A9',
-    padding: 5,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
-    marginRight: 5,
-  },
-  buttongtext: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#fff',
+  },
+  fieldContainer: {
+    marginBottom: 20,
+  },
+  fieldTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
   },
   input: {
     width: '100%',
@@ -476,11 +186,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
-  formContainer: {
-    marginBottom: 20,
+  addButton: {
+    backgroundColor: '#F0A500',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  row: {
+  saveButton: {
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#A9A9A9',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  optionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
@@ -488,74 +223,23 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     backgroundColor: '#fff',
   },
-  cell: {
+  optionText: {
     flex: 1,
     textAlign: 'center',
   },
-  tableContainer: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 0,
-    marginTop: 20,
-  },
-  tableHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000',
-    backgroundColor: '#fff',
-  },
-  headerCell: {
-    flex: 1,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: '#F0A500',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  deleteAllButton: {
-    backgroundColor: '#FF6B6B',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 10, // Increase padding to make the button larger
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-  },
-  actionButton: {
+  editButton: {
+    backgroundColor: '#1E90FF',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
     marginHorizontal: 5,
   },
-  optionsButton: {
-    backgroundColor: '#A9A9A9',
-  },
-  actionText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  noDataText: {
-    textAlign: 'center',
-    color: 'gray',
-    marginVertical: 20,
+  deleteButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginHorizontal: 5,
   },
   modalContainer: {
     flex: 1,
@@ -575,28 +259,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  modalButton: {
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginVertical: 5,
-    width: '100%',
-  },
-  updateButton: {
-    backgroundColor: '#1E90FF',
-  },
-  deleteButton: {
-    backgroundColor: '#FF6B6B',
-    borderRadius: 10
-  },
-  cancelButton: {
-    backgroundColor: '#A9A9A9',
-  },
-  viewButton: {
-    backgroundColor: '#FFD700',
-  },
-  modalButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  addButtonContainer: {
+    marginTop: 20,
   },
 });

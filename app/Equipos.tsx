@@ -37,6 +37,7 @@ export default function EquiposScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentField, setCurrentField] = useState('');
   const [options, setOptions] = useState([]);
+  const [optionsEquipos, setOptionsEquipos] = useState({});
   const router = useRouter();
 
   useEffect(() => {
@@ -77,6 +78,18 @@ export default function EquiposScreen() {
   };
 
   useEffect(() => {
+    const loadOptionsEquipos = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('optionsEquipos');
+        if (jsonValue != null) {
+          const loadedOptionsEquipos = JSON.parse(jsonValue);
+          setOptionsEquipos(loadedOptionsEquipos);
+        }
+      } catch (e) {
+        console.error("Error loading optionsEquipos", e);
+      }
+    };
+    loadOptionsEquipos();
     loadEquipos();
   }, []);
 

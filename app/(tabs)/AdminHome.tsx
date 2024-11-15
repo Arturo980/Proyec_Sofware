@@ -59,15 +59,12 @@ export default function HomeScreen() {
     loadTurnos();
   }, []);
 
-  const exportToExcel = async () => {
+  const exportToJSON = async () => {
     try {
       const equiposValue = await AsyncStorage.getItem('equipos');
       const turnosValue = await AsyncStorage.getItem('turnos');
       const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
       const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
-      const turnosWorksheet = XLSX.utils.json_to_sheet(turnosData);
-      const equiposWorksheet = XLSX.utils.json_to_sheet(equiposData);
-      const workbook = XLSX.utils.book_new();
       const userName = await AsyncStorage.getItem('userName');
       if (!userName) {
         throw new Error('No se encontró el nombre de usuario en AsyncStorage');
@@ -75,19 +72,20 @@ export default function HomeScreen() {
 
       const currentDate = new Date();
       const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
-      const fileName = `${formattedDate}_${userName}.xlsx`;
+      const equiposFileName = `${formattedDate}_${userName}_equipos.json`;
+      const turnosFileName = `${formattedDate}_${userName}_turnos.json`;
 
-      XLSX.utils.book_append_sheet(workbook, turnosWorksheet, 'Turnos');
-      XLSX.utils.book_append_sheet(workbook, equiposWorksheet, 'Equipos');
+      const equiposUri = FileSystem.documentDirectory + equiposFileName;
+      const turnosUri = FileSystem.documentDirectory + turnosFileName;
 
-      const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
-      const uri = FileSystem.documentDirectory + fileName;
+      await FileSystem.writeAsStringAsync(equiposUri, JSON.stringify(equiposData), { encoding: FileSystem.EncodingType.UTF8 });
+      await FileSystem.writeAsStringAsync(turnosUri, JSON.stringify(turnosData), { encoding: FileSystem.EncodingType.UTF8 });
 
-      await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
-      await Sharing.shareAsync(uri);
+      await Sharing.shareAsync(equiposUri);
+      await Sharing.shareAsync(turnosUri);
     } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      alert(`Error exporting to Excel: ${error.message}`);
+      console.error('Error exporting to JSON:', error);
+      alert(`Error exporting to JSON: ${error.message}`);
     }
   };
 
@@ -130,8 +128,8 @@ export default function HomeScreen() {
               <Text style={styles.cardText}>Administrador de Equipos</Text>
             </TouchableOpacity>
 
-        <TouchableOpacity style={styles.exportButton} onPress={exportToExcel}>
-          <Text style={styles.exportButtonText}>Exportar a XLSX</Text>
+        <TouchableOpacity style={styles.exportButton} onPress={exportToJSON}>
+          <Text style={styles.exportButtonText}>Exportar a JSON</Text>
         </TouchableOpacity>
       </View>
 
