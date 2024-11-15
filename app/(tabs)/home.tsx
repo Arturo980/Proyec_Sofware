@@ -143,23 +143,8 @@ export default function HomeScreen() {
     }
   };
 
-
   const handleLogout = async () => {
     try {
-      const turnosValue = await AsyncStorage.getItem('turnos');
-      const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
-  
-      // Eliminar fotos de las rutas de photoUri
-      for (const turno of turnosData) {
-        if (turno.photoUri) {
-          try {
-            await FileSystem.deleteAsync(turno.photoUri, { idempotent: true });
-          } catch (error) {
-            console.error('Error deleting photoUri:', error);
-          }
-        }
-      }
-  
       await AsyncStorage.removeItem('userName');
       router.push('auth/login');
     } catch (error) {
