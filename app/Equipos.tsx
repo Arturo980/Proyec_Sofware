@@ -174,10 +174,16 @@ export default function EquiposScreen() {
     if (field === 'marca' && equipoData.equipo) {
       const selectedEquipo = optionsEquipos.Equipos.find(e => e.Equipo === equipoData.equipo);
       uniqueOptions = selectedEquipo ? [...new Set(selectedEquipo.Marca)] : [];
+    } else if (field === 'equipo' && equipoData.marca) {
+      const selectedEquipos = optionsEquipos.Equipos.filter(e => e.Marca.includes(equipoData.marca));
+      uniqueOptions = selectedEquipos ? [...new Set(selectedEquipos.map(e => e.Equipo))] : [];
     } else {
       switch (field) {
         case 'equipo':
           uniqueOptions = [...new Set(optionsEquipos.Equipos.map(e => e.Equipo))];
+          break;
+        case 'marca':
+          uniqueOptions = [...new Set(optionsEquipos.Equipos.flatMap(e => e.Marca))];
           break;
         case 'numeroInterno':
           uniqueOptions = optionsEquipos.NuInterno;
@@ -352,9 +358,9 @@ export default function EquiposScreen() {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Selecciona Equipo</Text>
                   <ScrollView style={styles.scrollview}>
-                    {optionsEquipos.Equipos.map((option, index) => (
-                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option.Equipo)} style={styles.modalOption}>
-                        <Text style={styles.modalOptionText}>{option.Equipo}</Text>
+                    {options.map((option, index) => (
+                      <TouchableOpacity key={index} onPress={() => handleSelectOption(option)} style={styles.modalOption}>
+                        <Text style={styles.modalOptionText}>{option}</Text>
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
