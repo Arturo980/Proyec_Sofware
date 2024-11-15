@@ -221,6 +221,9 @@ export default function EquiposScreen() {
     }
     setOptions(uniqueOptions);
     setIsModalVisible(true);
+    if (field === 'options') {
+      setModalVisible(true);
+    }
   };
 
   const handleSelectOption = (option) => {
