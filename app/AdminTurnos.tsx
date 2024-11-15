@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import optionsTurnos from './Jsons/optionsTurnos.json';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function AdminTurnosScreen() {
   const [optionsData, setOptionsData] = useState({});
@@ -11,20 +14,27 @@ export default function AdminTurnosScreen() {
   const [editIndex, setEditIndex] = useState(null);
   const [editOption, setEditOption] = useState('');
 
-  useEffect(() => {
-    const loadOptionsData = async () => {
-      try {
-        const jsonValue = await AsyncStorage.getItem('optionsTurnos');
-        if (jsonValue != null) {
-          setOptionsData(JSON.parse(jsonValue));
-        } else {
-          setOptionsData(optionsTurnos);
-        }
-      } catch (e) {
-        console.error("Error loading optionsTurnos", e);
-        setOptionsData(optionsTurnos); // Ensure optionsData is set even if there's an error
+  const loadOptionsData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('optionsTurnos');
+      if (jsonValue != null) {
+        setOptionsData(JSON.parse(jsonValue));
+      } else {
+        setOptionsData(optionsTurnos);
       }
-    };
+    } catch (e) {
+      console.error("Error loading optionsTurnos", e);
+      setOptionsData(optionsTurnos); // Ensure optionsData is set even if there's an error
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadOptionsData();
+    }, [])
+  );
+
+  useEffect(() => {
     loadOptionsData();
   }, []);
 
@@ -92,6 +102,23 @@ export default function AdminTurnosScreen() {
     }
   };
 
+  const exportTurnosToJSON = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('optionsTurnos');
+      const turnosData = jsonValue ? JSON.parse(jsonValue) : optionsTurnos;
+      const currentDate = new Date();
+      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
+      const turnosFileName = `${formattedDate}_turnos.json`;
+      const turnosUri = FileSystem.documentDirectory + turnosFileName;
+
+      await FileSystem.writeAsStringAsync(turnosUri, JSON.stringify(turnosData), { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(turnosUri);
+    } catch (error) {
+      console.error('Error exporting turnos to JSON:', error);
+      alert(`Error exporting turnos to JSON: ${error.message}`);
+    }
+  };
+
   const renderOption = (field) => ({ item, index }) => (
     <View style={styles.optionRow}>
       <Text style={styles.optionText}>{item}</Text>
@@ -136,6 +163,9 @@ export default function AdminTurnosScreen() {
       />
       <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions(optionsData)}>
         <Text style={styles.buttonText}>Guardar Cambios</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.exportButton} onPress={exportTurnosToJSON}>
+        <Text style={styles.buttonText}>Exportar Turnos a JSON</Text>
       </TouchableOpacity>
       <Modal transparent={true} animationType="slide" visible={isModalVisible}>
         <View style={styles.modalContainer}>
@@ -206,6 +236,13 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#A9A9A9',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  exportButton: {
+    backgroundColor: '#1E90FF',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',

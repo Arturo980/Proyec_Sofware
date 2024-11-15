@@ -7,6 +7,8 @@ import XLSX from 'xlsx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { exportTurnosToJSON } from '../AdminTurnos';
+import { exportEquiposToJSON } from '../AdminEquipos';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -59,33 +61,21 @@ export default function HomeScreen() {
     loadTurnos();
   }, []);
 
-  const exportToJSON = async () => {
+  const exportTurnos = async () => {
     try {
-      const equiposValue = await AsyncStorage.getItem('equipos');
-      const turnosValue = await AsyncStorage.getItem('turnos');
-      const equiposData = equiposValue ? JSON.parse(equiposValue) : [];
-      const turnosData = turnosValue ? JSON.parse(turnosValue) : [];
-      const userName = await AsyncStorage.getItem('userName');
-      if (!userName) {
-        throw new Error('No se encontró el nombre de usuario en AsyncStorage');
-      }
-
-      const currentDate = new Date();
-      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
-      const equiposFileName = `${formattedDate}_${userName}_equipos.json`;
-      const turnosFileName = `${formattedDate}_${userName}_turnos.json`;
-
-      const equiposUri = FileSystem.documentDirectory + equiposFileName;
-      const turnosUri = FileSystem.documentDirectory + turnosFileName;
-
-      await FileSystem.writeAsStringAsync(equiposUri, JSON.stringify(equiposData), { encoding: FileSystem.EncodingType.UTF8 });
-      await FileSystem.writeAsStringAsync(turnosUri, JSON.stringify(turnosData), { encoding: FileSystem.EncodingType.UTF8 });
-
-      await Sharing.shareAsync(equiposUri);
-      await Sharing.shareAsync(turnosUri);
+      await exportTurnosToJSON();
     } catch (error) {
-      console.error('Error exporting to JSON:', error);
-      alert(`Error exporting to JSON: ${error.message}`);
+      console.error('Error exporting turnos to JSON:', error);
+      alert(`Error exporting turnos to JSON: ${error.message}`);
+    }
+  };
+
+  const exportEquipos = async () => {
+    try {
+      await exportEquiposToJSON();
+    } catch (error) {
+      console.error('Error exporting equipos to JSON:', error);
+      alert(`Error exporting equipos to JSON: ${error.message}`);
     }
   };
 
@@ -96,6 +86,10 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error al borrar AsyncStorage:', error);
     }
+  };
+
+  const handleLoadJSON = () => {
+    router.push('../LoadJSON');
   };
 
   return (
@@ -127,8 +121,8 @@ export default function HomeScreen() {
             <Text style={styles.cardText}>Administrador de Equipos</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.exportButton} onPress={exportToJSON}>
-          <Text style={styles.exportButtonText}>Exportar a JSON</Text>
+        <TouchableOpacity style={styles.importButton} onPress={handleLoadJSON}>
+          <Text style={styles.importButtonText}>Importar Opciones</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Salir</Text>
@@ -229,6 +223,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   exportButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  importButton: {
+    backgroundColor: '#007BFF', // Change to blue
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
+  },
+  importButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',

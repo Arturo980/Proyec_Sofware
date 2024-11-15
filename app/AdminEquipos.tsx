@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, Modal, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import optionsEquipos from './Jsons/optionsEquipos.json';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function AdminEquiposScreen() {
   const [optionsData, setOptionsData] = useState({});
@@ -15,19 +18,26 @@ export default function AdminEquiposScreen() {
   const [isAddEquipoModalVisible, setIsAddEquipoModalVisible] = useState(false);
   const [isMarcaModalVisible, setIsMarcaModalVisible] = useState(false);
 
-  useEffect(() => {
-    const loadOptionsData = async () => {
-      try {
-        const jsonValue = await AsyncStorage.getItem('optionsEquipos');
-        if (jsonValue != null) {
-          setOptionsData(JSON.parse(jsonValue));
-        } else {
-          setOptionsData(optionsEquipos);
-        }
-      } catch (e) {
-        console.error("Error loading optionsEquipos", e);
+  const loadOptionsData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('optionsEquipos');
+      if (jsonValue != null) {
+        setOptionsData(JSON.parse(jsonValue));
+      } else {
+        setOptionsData(optionsEquipos);
       }
-    };
+    } catch (e) {
+      console.error("Error loading optionsEquipos", e);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadOptionsData();
+    }, [])
+  );
+
+  useEffect(() => {
     loadOptionsData();
   }, []);
 
@@ -75,6 +85,7 @@ export default function AdminEquiposScreen() {
   };
 
   const handleDeleteOption = (index) => {
+    if (!currentField) return; // Ensure currentField is set
     Alert.alert(
       'Eliminar Opción',
       '¿Estás seguro de que deseas eliminar esta opción?',
@@ -128,15 +139,32 @@ export default function AdminEquiposScreen() {
     setIsMarcaModalVisible(false);
   };
 
+  const exportEquiposToJSON = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('optionsEquipos');
+      const equiposData = jsonValue ? JSON.parse(jsonValue) : optionsEquipos;
+      const currentDate = new Date();
+      const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getFullYear()}`;
+      const equiposFileName = `${formattedDate}_equipos.json`;
+      const equiposUri = FileSystem.documentDirectory + equiposFileName;
+
+      await FileSystem.writeAsStringAsync(equiposUri, JSON.stringify(equiposData), { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(equiposUri);
+    } catch (error) {
+      console.error('Error exporting equipos to JSON:', error);
+      alert(`Error exporting equipos to JSON: ${error.message}`);
+    }
+  };
+
   const renderOption = ({ item, index }) => {
     if (typeof item === 'object') {
       return (
         <View key={index} style={styles.optionRow}>
           <Text style={styles.optionText}>{`${item.Equipo}, ${item.Marca.join(', ')}`}</Text>
-          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); }}>
+          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField('Equipos'); }}>
             <Text style={styles.buttonText}>Editar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
+          <TouchableOpacity style={styles.deleteButton} onPress={() => { setCurrentField('Equipos'); handleDeleteOption(index); }}>
             <Text style={styles.buttonText}>Eliminar</Text>
           </TouchableOpacity>
         </View>
@@ -200,6 +228,9 @@ export default function AdminEquiposScreen() {
       />
       <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions(optionsData)}>
         <Text style={styles.buttonText}>Guardar Cambios</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.exportButton} onPress={exportEquiposToJSON}>
+        <Text style={styles.buttonText}>Exportar Equipos a JSON</Text>
       </TouchableOpacity>
       <Modal transparent={true} animationType="slide" visible={isModalVisible}>
         <View style={styles.modalContainer}>
@@ -322,6 +353,13 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#A9A9A9',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  exportButton: {
+    backgroundColor: '#007bff',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
