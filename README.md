@@ -1,4 +1,3 @@
-```markdown
 # Bienvenido a tu aplicación Expo 👋
 
 Este es un proyecto de [Expo](https://expo.dev) creado con [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
@@ -91,4 +90,3 @@ Si deseas contribuir al proyecto, puedes hacerlo de las siguientes maneras:
 ## Licencia
 
 Este proyecto está bajo la licencia MIT. Para más detalles, revisa el archivo [LICENSE](LICENSE).
-```
