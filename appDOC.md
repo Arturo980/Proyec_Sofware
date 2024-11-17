@@ -19,21 +19,14 @@ La pantalla de inicio (`HomeScreen`) contiene varias tarjetas interactivas que e
 ### 7. **index.txt**:
 Este archivo contiene la pantalla principal de la aplicación. Desde aquí, el usuario puede navegar a diferentes secciones de la aplicación, como *Login*, *Home*, *Profile*, *Settings* y *Recurso* (Recursos). Se utiliza `useRouter` de `expo-router` para gestionar la navegación entre las pantallas.
 
-
 ### 8. ** profile.tsx**:
 Este archivo define la pantalla de perfil de usuario. Aquí se muestra la información personal del usuario (como su nombre y correo electrónico), además de varias opciones disponibles como *Editar Perfil*, *Configuraciones* y *Cambiar Contraseña*. También incluye una opción para *Cerrar Sesión*.
 
-
 ### 9. ** resource.tsx**:
-
 Este archivo contiene la pantalla de recursos. Aunque la descripción exacta no fue proporcionada, generalmente en aplicaciones de este tipo, la pantalla de *Recurso* podría ofrecer acceso a contenido adicional o funcionalidades específicas relacionadas con el servicio o la aplicación en general.
 
-
 ### 10. **settings.tsx**:
-
 Este archivo define la pantalla de configuración, donde se pueden gestionar las preferencias y configuraciones del usuario dentro de la aplicación. Actualmente, se muestra solo un texto indicando que es la "Settings Screen", aunque probablemente en futuras actualizaciones se agregarán opciones específicas para el usuario.
 
-
 ### 11. **login.tsx**:
-
 Este archivo contiene la pantalla de inicio de sesión, donde el usuario puede ingresar su nombre de usuario y contraseña para acceder a la aplicación. Proporciona los campos necesarios para la autenticación y un botón para enviar los datos de inicio de sesión.
