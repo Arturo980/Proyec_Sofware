@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, Alert
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import optionsEquipos from './Jsons/optionsEquipos.json';
+import optionsEquiposJson from './Jsons/optionsEquipos.json';
 import optionsTurnos from './Jsons/optionsTurnos.json';
 import { useRouter } from 'expo-router';
 
@@ -37,7 +37,19 @@ export default function EquiposScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentField, setCurrentField] = useState('');
   const [options, setOptions] = useState([]);
-  const [optionsEquipos, setOptionsEquipos] = useState({});
+  const [optionsEquipos, setOptionsEquipos] = useState({
+    Equipos: [],
+    NuInterno: [],
+    Estado: [],
+    Petroleo: [],
+    EstandarPetroleo: [],
+    AdherenciaPetroleo: [],
+    Ubicacion: [],
+    EstandarES: [],
+    Nivel: [],
+    Report: [],
+    Grupo: []
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -80,11 +92,8 @@ export default function EquiposScreen() {
   useEffect(() => {
     const loadOptionsEquipos = async () => {
       try {
-        const jsonValue = await AsyncStorage.getItem('optionsEquipos');
-        if (jsonValue != null) {
-          const loadedOptionsEquipos = JSON.parse(jsonValue);
-          setOptionsEquipos(loadedOptionsEquipos);
-        }
+        // Load optionsEquipos from JSON file directly
+        setOptionsEquipos(optionsEquiposJson);
       } catch (e) {
         console.error("Error loading optionsEquipos", e);
       }
@@ -193,40 +202,40 @@ export default function EquiposScreen() {
     } else {
       switch (field) {
         case 'equipo':
-          uniqueOptions = [...new Set(optionsEquipos.Equipos.map(e => e.Equipo))];
+          uniqueOptions = optionsEquipos.Equipos ? [...new Set(optionsEquipos.Equipos.map(e => e.Equipo))] : [];
           break;
         case 'marca':
-          uniqueOptions = [...new Set(optionsEquipos.Equipos.flatMap(e => e.Marca))];
+          uniqueOptions = optionsEquipos.Equipos ? [...new Set(optionsEquipos.Equipos.flatMap(e => e.Marca))] : [];
           break;
         case 'numeroInterno':
-          uniqueOptions = optionsEquipos.NuInterno;
+          uniqueOptions = optionsEquipos.NuInterno || [];
           break;
         case 'estado':
-          uniqueOptions = optionsEquipos.Estado;
+          uniqueOptions = optionsEquipos.Estado || [];
           break;
         case 'porcentajePetroleo':
-          uniqueOptions = optionsEquipos.Petroleo;
+          uniqueOptions = optionsEquipos.Petroleo || [];
           break;
         case 'estandarPetroleo':
-          uniqueOptions = optionsEquipos.EstandarPetroleo;
+          uniqueOptions = optionsEquipos.EstandarPetroleo || [];
           break;
         case 'adherenciaPetroleo':
-          uniqueOptions = optionsEquipos.AdherenciaPetroleo;
+          uniqueOptions = optionsEquipos.AdherenciaPetroleo || [];
           break;
         case 'ubicacion':
-          uniqueOptions = optionsEquipos.Ubicacion;
+          uniqueOptions = optionsEquipos.Ubicacion || [];
           break;
         case 'estandarES':
-          uniqueOptions = optionsEquipos.EstandarES;
+          uniqueOptions = optionsEquipos.EstandarES || [];
           break;
         case 'nivel':
-          uniqueOptions = optionsEquipos.Nivel;
+          uniqueOptions = optionsEquipos.Nivel || [];
           break;
         case 'report':
-          uniqueOptions = optionsEquipos.Report;
+          uniqueOptions = optionsEquipos.Report || [];
           break;
         case 'grupo':
-          uniqueOptions = optionsEquipos.Grupo;
+          uniqueOptions = optionsEquipos.Grupo || [];
           break;
         default:
           uniqueOptions = [];
