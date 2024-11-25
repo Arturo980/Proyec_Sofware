@@ -198,6 +198,31 @@ export default function AdminEquiposScreen() {
       Alert.alert('Error', 'Hubo un problema al guardar las opciones.');
     }
   };
+  const handleEditOption1 = () => {
+    if (editOption.trim() === '' || !currentField) return;
+    setOptionsData(prevState => {
+      const updatedOptions = [...prevState[currentField]];
+      updatedOptions[editIndex] = editOption;
+      const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+      handleSaveOptions(newOptionsData);
+      return newOptionsData;
+    });
+    setEditOption('');
+    setEditIndex(null);
+    setIsModalVisible(false);
+  };
+  const handleSaveOptions1 = async (optionsDataToSave) => {
+    if (!optionsDataToSave) return;
+    try {
+      await AsyncStorage.setItem('optionsTurnos', JSON.stringify(optionsDataToSave));
+      setOptionsData(optionsDataToSave); // Ensure state is updated after saving
+      Alert.alert('Guardado', 'Las opciones se han guardado correctamente.');
+    } catch (e) {
+      console.error("Error saving options", e);
+      Alert.alert('Error', 'Hubo un problema al guardar las opciones.');
+    }
+  };
+
 
   const handleOpenAddEquipoModal = () => {
     setIsAddEquipoModalVisible(true);
@@ -307,7 +332,7 @@ export default function AdminEquiposScreen() {
         )}
         keyExtractor={(item, index) => index.toString()}
       />
-      <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions(optionsData)}>
+      <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions1(optionsData)}>
         <Text style={styles.buttonText}>Guardar Cambios</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.exportButton} onPress={exportEquiposToJSON}>
@@ -349,7 +374,7 @@ export default function AdminEquiposScreen() {
                 placeholderTextColor="#888"
               />
             )}
-            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption1}>
               <Text style={styles.buttonText}>Guardar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setIsModalVisible(false)}>
