@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
-    marginVertical: 50,
+    marginVertical: '20%',
   },
   cardWrapper: {
     alignItems: 'center',   
@@ -259,14 +259,14 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#F0A500',
     width: '100%',         
-    height: 200,
+    height: 140,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
     marginTop: 10,        
   },
   cardImage: {
-    width: '100%',  
+    width: '95%',  
     height: undefined,
     aspectRatio: 1.8,
     resizeMode: 'contain',
