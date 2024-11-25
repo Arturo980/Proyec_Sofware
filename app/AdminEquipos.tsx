@@ -7,7 +7,7 @@ import * as Sharing from 'expo-sharing';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function AdminEquiposScreen() {
-  const [optionsData, setOptionsData] = useState({});
+  const [optionsData, setOptionsData] = useState({ Equipos: [] });
   const [currentField, setCurrentField] = useState('');
   const [newOption, setNewOption] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -60,7 +60,7 @@ export default function AdminEquiposScreen() {
     setOptionsData(prevState => {
       const updatedOptions = {
         ...prevState,
-        Equipos: [...prevState.Equipos, { Equipo: newEquipo, Marca: [newMarca] }]
+        Equipos: prevState.Equipos ? [...prevState.Equipos, { Equipo: newEquipo, Marca: newMarca.split(',').map(m => m.trim()) }] : [{ Equipo: newEquipo, Marca: newMarca.split(',').map(m => m.trim()) }]
       };
       handleSaveOptions(updatedOptions); // Save options after adding a new equipo
       return updatedOptions;
@@ -71,10 +71,14 @@ export default function AdminEquiposScreen() {
   };
 
   const handleEditOption = () => {
-    if (editOption.trim() === '') return;
+    if (!editOption || !currentField || !optionsData[currentField]) return;
     setOptionsData(prevState => {
       const updatedOptions = [...prevState[currentField]];
-      updatedOptions[editIndex] = editOption;
+      if (currentField === 'Equipos') {
+        updatedOptions[editIndex] = { ...updatedOptions[editIndex], Equipo: editOption.Equipo, Marca: editOption.Marca };
+      } else {
+        updatedOptions[editIndex] = editOption;
+      }
       const newOptionsData = { ...prevState, [currentField]: updatedOptions };
       handleSaveOptions(newOptionsData); // Save options after editing an option
       return newOptionsData;
@@ -84,8 +88,28 @@ export default function AdminEquiposScreen() {
     setIsModalVisible(false);
   };
 
+  const handleSelectEditMarca = (marca) => {
+    setEditOption(prev => ({ ...prev, Marca: [...(prev.Marca || []), marca] }));
+    setIsMarcaModalVisible(false);
+  };
+
+  const handleAddEditMarca = () => {
+    if (newMarca.trim() === '') return;
+    setEditOption(prev => ({ ...prev, Marca: [...(prev.Marca || []), newMarca] }));
+    setNewMarca('');
+    setIsMarcaModalVisible(false);
+  };
+
+  const handleRemoveEditMarca = (marca) => {
+    setEditOption(prev => ({ ...prev, Marca: prev.Marca.filter(m => m !== marca) }));
+  };
+
+  const handleRemoveNewMarca = (marca) => {
+    setNewMarca(prev => prev.split(',').filter(m => m.trim() !== marca).join(', '));
+  };
+
   const handleDeleteOption = (index) => {
-    if (!currentField) return; // Ensure currentField is set
+    if (!currentField || !optionsData[currentField]) return; // Ensure currentField is set and valid
     Alert.alert(
       'Eliminar Opción',
       '¿Estás seguro de que deseas eliminar esta opción?',
@@ -135,7 +159,7 @@ export default function AdminEquiposScreen() {
   };
 
   const handleSelectMarca = (marca) => {
-    setNewMarca(marca);
+    setNewMarca(prev => prev ? `${prev}, ${marca}` : marca);
     setIsMarcaModalVisible(false);
   };
 
@@ -160,7 +184,7 @@ export default function AdminEquiposScreen() {
     if (typeof item === 'object') {
       return (
         <View key={index} style={styles.optionRow}>
-          <Text style={styles.optionText}>{`${item.Equipo}, ${item.Marca.join(', ')}`}</Text>
+          <Text style={styles.optionText}>{`${item.Equipo}, ${Array.isArray(item.Marca) ? item.Marca.join(', ') : ''}`}</Text>
           <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField('Equipos'); }}>
             <Text style={styles.buttonText}>Editar</Text>
           </TouchableOpacity>
@@ -173,7 +197,7 @@ export default function AdminEquiposScreen() {
       return (
         <View style={styles.optionRow}>
           <Text style={styles.optionText}>{item}</Text>
-          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); }}>
+          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField(currentField); }}>
             <Text style={styles.buttonText}>Editar</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
@@ -236,12 +260,38 @@ export default function AdminEquiposScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Editar Opción</Text>
-            <TextInput
-              style={styles.input}
-              value={editOption}
-              onChangeText={setEditOption}
-              placeholderTextColor="#888"
-            />
+            {currentField === 'Equipos' ? (
+              <>
+                <TextInput
+                  style={styles.input}
+                  value={editOption.Equipo || ''}
+                  onChangeText={(text) => setEditOption({ ...editOption, Equipo: text })}
+                  placeholder={editOption.Equipo || 'Nombre del Equipo'}
+                  placeholderTextColor="#888"
+                />
+                <View style={styles.marcaContainer}>
+                  {editOption.Marca && editOption.Marca.map((marca, index) => (
+                    <View key={index} style={styles.marcaTag}>
+                      <Text style={styles.marcaText}>{marca}</Text>
+                      <TouchableOpacity style={styles.removeMarcaButton} onPress={() => handleRemoveEditMarca(marca)}>
+                        <Text style={styles.removeMarcaButtonText}>Eliminar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+                <TouchableOpacity style={styles.addMarcaButton} onPress={() => setIsMarcaModalVisible(true)}>
+                  <Text style={styles.addMarcaButtonText}>Agregar Marca</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={editOption}
+                onChangeText={setEditOption}
+                placeholder={editOption}
+                placeholderTextColor="#888"
+              />
+            )}
             <TouchableOpacity style={styles.saveButton} onPress={handleEditOption}>
               <Text style={styles.buttonText}>Guardar</Text>
             </TouchableOpacity>
@@ -262,7 +312,17 @@ export default function AdminEquiposScreen() {
               onChangeText={setNewEquipo}
               placeholderTextColor="#888"
             />
-            <TouchableOpacity style={styles.input} onPress={handleOpenMarcaModal}>
+            <View style={styles.marcaContainer}>
+              {newMarca.split(',').map(m => m.trim()).filter(m => m).map((marca, index) => (
+                <View key={index} style={styles.marcaTag}>
+                  <Text style={styles.marcaText}>{marca}</Text>
+                  <TouchableOpacity style={styles.removeMarcaButton} onPress={() => handleRemoveNewMarca(marca)}>
+                    <Text style={styles.removeMarcaButtonText}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.input} onPress={() => setIsMarcaModalVisible(true)}>
               <Text style={{ color: newMarca ? '#000' : '#888' }}>{newMarca || 'Seleccionar o agregar Marca'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveButton} onPress={handleAddEquipo}>
@@ -281,7 +341,13 @@ export default function AdminEquiposScreen() {
             <FlatList
               data={[...new Set(optionsData.Equipos?.flatMap(e => e.Marca) || [])]}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.modalOption} onPress={() => handleSelectMarca(item)}>
+                <TouchableOpacity style={styles.modalOption} onPress={() => {
+                  if (currentField === 'Equipos') {
+                    handleSelectEditMarca(item);
+                  } else {
+                    handleSelectMarca(item);
+                  }
+                }}>
                   <Text style={styles.modalOptionText}>{item}</Text>
                 </TouchableOpacity>
               )}
@@ -294,7 +360,7 @@ export default function AdminEquiposScreen() {
               onChangeText={setNewMarca}
               placeholderTextColor="#888"
             />
-            <TouchableOpacity style={styles.saveButton} onPress={handleCloseMarcaModal}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleAddEditMarca}>
               <Text style={styles.buttonText}>Aceptar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={handleCloseMarcaModal}>
@@ -428,5 +494,75 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontSize: 18,
     textAlign: 'center',
+  },
+  marcaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  marcaText: {
+    flex: 1,
+    fontSize: 16,
+  },
+  removeMarcaButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 5,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeMarcaButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  marcaContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 10,
+  },
+  marcaTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 15,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    margin: 5,
+  },
+  marcaText: {
+    fontSize: 14,
+    color: '#333',
+    marginRight: 10,
+  },
+  removeMarcaButton: {
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 15,
+  },
+  removeMarcaButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  addMarcaButton: {
+    width: '100%',
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    alignItems: 'center',
+  },
+  addMarcaButtonText: {
+    color: '#888',
+    fontSize: 16,
   },
 });
