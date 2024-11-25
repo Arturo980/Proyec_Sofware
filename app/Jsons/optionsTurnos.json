@@ -1,0 +1,14 @@
+{
+  "turnoSaliente": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"],
+  "nombreSaliente": ["Nombre1", "Nombre2", "Nombre3", "Nombre4", "Nombre5", "Nombre6", "Nombre7", "Nombre8", "Nombre9", "Nombre10", 
+                     "Nombre11", "Nombre12", "Nombre13", "Nombre14", "Nombre15", "Nombre16", "Nombre17", "Nombre18", "Nombre19", "Nombre20"],
+  "grupoSaliente": ["Grupo1", "Grupo2", "Grupo3", "Grupo4", "Grupo5", "Grupo6", "Grupo7", "Grupo8", "Grupo9", "Grupo10",
+                    "Grupo11", "Grupo12", "Grupo13", "Grupo14", "Grupo15", "Grupo16", "Grupo17", "Grupo18", "Grupo19", "Grupo20"],
+  "postura": ["Postura1", "Postura2", "Postura3", "Postura4", "Postura5", "Postura6", "Postura7", "Postura8", "Postura9", "Postura10", 
+              "Postura11", "Postura12", "Postura13", "Postura14", "Postura15", "Postura16", "Postura17", "Postura18", "Postura19", "Postura20"],
+  "estatusFinal": ["Estatus1", "Estatus2", "Estatus3", "Estatus4", "Estatus5", "Estatus6", "Estatus7", "Estatus8", "Estatus9", "Estatus10", 
+                   "Estatus11", "Estatus12", "Estatus13", "Estatus14", "Estatus15", "Estatus16", "Estatus17", "Estatus18", "Estatus19", "Estatus20"],
+  "estatusReal": ["Real1", "Real2", "Real3", "Real4", "Real5", "Real6", "Real7", "Real8", "Real9", "Real10", 
+                  "Real11", "Real12", "Real13", "Real14", "Real15", "Real16", "Real17", "Real18", "Real19", "Real20"],
+  "adherencia":["0%","100%"]
+}

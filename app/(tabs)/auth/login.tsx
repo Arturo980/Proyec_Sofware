@@ -1,75 +1,101 @@
-// app/auth/login.tsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import * as MediaLibrary from 'expo-media-library';
+import { Camera } from 'expo-camera';
+import useOrientation from '@/hooks/useOrientation';
+import * as FileSystem from 'expo-file-system';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const router = useRouter();
+  const orientation = useOrientation();
 
-  const handleLogin = () => {
-    console.log('Login successful');
-    router.push('/home'); // Navega a la pantalla principal después del login
+  useFocusEffect(
+    useCallback(() => {
+      setName(''); // Restablece el estado del nombre cuando la pantalla se enfoca
+    }, [])
+  );
+
+  useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
+        const { status: mediaLibraryStatus } = await MediaLibrary.requestPermissionsAsync();
+
+        if (cameraStatus !== 'granted' || mediaLibraryStatus !== 'granted') {
+          Alert.alert('Error', 'Se requieren permisos para la cámara y la biblioteca de medios.');
+        }
+      } catch (error) {
+        console.error('Error requesting permissions:', error);
+        Alert.alert('Error', 'Hubo un problema al solicitar permisos.');
+      }
+    };
+
+    requestPermissions();
+  }, []);
+
+  const handleLogin = async () => {
+    if (name.length < 3) {
+      Alert.alert('Error', 'Error Campo vacío');
+      return;
+    }
+
+    try {
+      await AsyncStorage.setItem('userName', name);
+      console.log('Login successful');
+      if (name === 'Admin') {
+        router.push('/AdminHome');
+        return;
+      } else {
+        router.push('/home');
+      }
+    } catch (error) {
+      console.error('Error saving name to AsyncStorage:', error);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      {/* Logo */}
-      <Image source={require('../../../assets/images/minetrack.png')} style={styles.logo} />
-
-      {/* Título */}
-      <Text style={styles.subtitle}>Inicia sesión</Text>
-
-      {/* Campo de Email */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email address"
-          value={email}
-          onChangeText={setEmail}
-        />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.inner}>
+        <Image source={require('@/assets/images/minetrack.png')} style={styles.logo} />
+        <Text style={styles.subtitle}>Ingrese su nombre</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Tu nombre"
+            value={name}
+            onChangeText={setName}
+            onSubmitEditing={handleLogin}
+            returnKeyType="done"
+          />
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Siguiente</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Campo de Password */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          secureTextEntry
-          onChangeText={setPassword}
-        />
-      </View>
-
-      {/* Botón de inicio de sesión */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Iniciar sesión</Text>
-      </TouchableOpacity>
-
-      {/* ¿Olvidaste tu contraseña? y Registro */}
-      <TouchableOpacity onPress={() => { /* Navegar a la pantalla de recuperación */ }}>
-        <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => { /* Navegar a la pantalla de registro */ }}>
-        <Text style={styles.register}>¡Regístrate!</Text>
-      </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  inner: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#4E4E4E',  // Fondo gris similar
+    backgroundColor: '#4E4E4E',
     paddingHorizontal: 16,
   },
   logo: {
-    width: 250,  // Ajusta el tamaño del logo
+    width: 250,
     height: 250,
     marginBottom: 20,
   },
@@ -90,7 +116,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   button: {
-    backgroundColor: '#F0A500',  // Botón amarillo
+    backgroundColor: '#F0A500',
     padding: 12,
     borderRadius: 8,
     width: '100%',

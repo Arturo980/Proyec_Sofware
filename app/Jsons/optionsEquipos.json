@@ -1,0 +1,42 @@
+{
+  "Equipos": [
+    {
+      "Equipo": "Equipo1",
+      "Marca": ["Marca A"]
+    },
+    {
+      "Equipo": "Equipo2",
+      "Marca": ["Marca B"]
+    },
+    {
+      "Equipo": "Equipo3",
+      "Marca": ["Marca C", "Marca D"]
+    },
+    {
+      "Equipo": "Equipo4",
+      "Marca": ["Marca A"]
+    },
+    {
+      "Equipo": "Equipo5",
+      "Marca": ["Marca B"]
+    },
+    {
+      "Equipo": "Equipo6",
+      "Marca": ["Marca C"]
+    },
+    {
+      "Equipo": "Equipo7",
+      "Marca": ["Marca A", "Marca B"]
+    }
+  ],
+  "NuInterno": ["001", "002", "003"],
+  "Estado": ["Activo", "Inactivo", "Mantenimiento"],
+  "Petroleo": ["10%", "20%", "30%"],
+  "EstandarPetroleo": ["Estándar1", "Estándar2", "Estándar3"],
+  "AdherenciaPetroleo": ["Alta", "Media", "Baja"],
+  "Ubicacion": ["Ubicación1", "Ubicación2", "Ubicación3"],
+  "EstandarES": ["EstándarA", "EstándarB", "EstándarC"],
+  "Nivel": ["Nivel1", "Nivel2", "Nivel3"],
+  "Report": ["Report1", "Report2", "Report3"],
+  "Grupo": ["GrupoA", "GrupoB", "GrupoC"]
+}
