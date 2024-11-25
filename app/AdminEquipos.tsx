@@ -70,15 +70,11 @@ export default function AdminEquiposScreen() {
     setIsAddEquipoModalVisible(false);
   };
 
-  const handleEditOption = () => {
+  const handleSaveNonEquiposOption = () => {
     if (!editOption || !currentField || !optionsData[currentField]) return;
     setOptionsData(prevState => {
       const updatedOptions = [...prevState[currentField]];
-      if (currentField === 'Equipos') {
-        updatedOptions[editIndex] = { ...updatedOptions[editIndex], Equipo: editOption.Equipo, Marca: editOption.Marca };
-      } else {
-        updatedOptions[editIndex] = editOption;
-      }
+      updatedOptions[editIndex] = editOption;
       const newOptionsData = { ...prevState, [currentField]: updatedOptions };
       handleSaveOptions(newOptionsData); // Save options after editing an option
       return newOptionsData;
@@ -86,6 +82,44 @@ export default function AdminEquiposScreen() {
     setEditOption('');
     setEditIndex(null);
     setIsModalVisible(false);
+  };
+
+  const handleSaveEquiposOption = () => {
+    if (!editOption || !currentField || !optionsData[currentField]) return;
+    setOptionsData(prevState => {
+      const updatedOptions = [...prevState[currentField]];
+      updatedOptions[editIndex] = { ...updatedOptions[editIndex], Equipo: editOption.Equipo, Marca: editOption.Marca };
+      const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+      handleSaveOptions(newOptionsData); // Save options after editing an option
+      return newOptionsData;
+    });
+    setEditOption('');
+    setEditIndex(null);
+    setIsModalVisible(false);
+  };
+
+  const handleSaveNuInternoAndBelowOption = () => {
+    if (!editOption || !currentField || !optionsData[currentField]) return;
+    setOptionsData(prevState => {
+      const updatedOptions = [...prevState[currentField]];
+      updatedOptions[editIndex] = editOption;
+      const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+      handleSaveOptions(newOptionsData); // Save options after editing an option
+      return newOptionsData;
+    });
+    setEditOption('');
+    setEditIndex(null);
+    setIsModalVisible(false);
+  };
+
+  const handleEditOption = () => {
+    if (currentField === 'Equipos') {
+      handleSaveEquiposOption();
+    } else if (['NuInterno', 'Estado', 'Petroleo', 'EstandarPetroleo', 'AdherenciaPetroleo', 'Ubicacion', 'EstandarES', 'Nivel', 'Report', 'Grupo'].includes(currentField)) {
+      handleSaveNuInternoAndBelowOption();
+    } else {
+      handleSaveNonEquiposOption();
+    }
   };
 
   const handleSelectEditMarca = (marca) => {
@@ -123,6 +157,29 @@ export default function AdminEquiposScreen() {
               updatedOptions.splice(index, 1);
               const newOptionsData = { ...prevState, [currentField]: updatedOptions };
               handleSaveOptions(newOptionsData); // Save options after deleting an option
+              return newOptionsData;
+            });
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteEquipo = (index) => {
+    if (!currentField || !optionsData[currentField]) return; // Ensure currentField is set and valid
+    Alert.alert(
+      'Eliminar Equipo',
+      '¿Estás seguro de que deseas eliminar este equipo?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: () => {
+            setOptionsData(prevState => {
+              const updatedOptions = [...prevState.Equipos];
+              updatedOptions.splice(index, 1);
+              const newOptionsData = { ...prevState, Equipos: updatedOptions };
+              handleSaveOptions(newOptionsData); // Save options after deleting an equipo
               return newOptionsData;
             });
           }
@@ -188,7 +245,7 @@ export default function AdminEquiposScreen() {
           <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField('Equipos'); }}>
             <Text style={styles.buttonText}>Editar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={() => { setCurrentField('Equipos'); handleDeleteOption(index); }}>
+          <TouchableOpacity style={styles.deleteButton} onPress={() => { setCurrentField('Equipos'); handleDeleteEquipo(index); }}>
             <Text style={styles.buttonText}>Eliminar</Text>
           </TouchableOpacity>
         </View>
@@ -288,7 +345,7 @@ export default function AdminEquiposScreen() {
                 style={styles.input}
                 value={editOption}
                 onChangeText={setEditOption}
-                placeholder={editOption}
+                placeholder={`Editar ${currentField}`}
                 placeholderTextColor="#888"
               />
             )}
