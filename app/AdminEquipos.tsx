@@ -332,7 +332,7 @@ export default function AdminEquiposScreen() {
         )}
         keyExtractor={(item, index) => index.toString()}
       />
-      <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions1(optionsData)}>
+      <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions(optionsData)}>
         <Text style={styles.buttonText}>Guardar Cambios</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.exportButton} onPress={exportEquiposToJSON}>
