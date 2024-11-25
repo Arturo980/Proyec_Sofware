@@ -374,7 +374,7 @@ export default function AdminEquiposScreen() {
                 placeholderTextColor="#888"
               />
             )}
-            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption1}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption} disabled={editOption.trim() === ''}>
               <Text style={styles.buttonText}>Guardar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setIsModalVisible(false)}>
