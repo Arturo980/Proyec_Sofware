@@ -18,6 +18,7 @@ export default function LoadJSONScreen() {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setTurnosFile(result.assets[0]);
         console.log('Turnos file selected:', result.assets[0].uri);
+        Alert.alert('Archivo Seleccionado', `Se ha cargado el archivo de opciones de Turnos: ${result.assets[0].name}`);
       } else {
         console.log('Turnos file selection cancelled');
       }
@@ -34,6 +35,7 @@ export default function LoadJSONScreen() {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setEquiposFile(result.assets[0]);
         console.log('Equipos file selected:', result.assets[0].uri);
+        Alert.alert('Archivo Seleccionado', `Se ha cargado el archivo de opciones de Equipos: ${result.assets[0].name}`);
       } else {
         console.log('Equipos file selection cancelled');
       }
@@ -77,13 +79,19 @@ export default function LoadJSONScreen() {
     <View style={styles.container}>
       <Text style={styles.header}>Cargar JSON</Text>
       <TouchableOpacity style={styles.pickButton} onPress={handlePickTurnosFile}>
-        <Text style={styles.buttonText}>Seleccionar JSON de Turnos</Text>
+        <Text style={styles.buttonText}>Cargar opciones de Turnos</Text>
       </TouchableOpacity>
+      {turnosFile && (
+        <Text style={styles.fileNameText}>Archivo seleccionado: {turnosFile.name}</Text>
+      )}
       <TouchableOpacity style={styles.pickButton} onPress={handlePickEquiposFile}>
-        <Text style={styles.buttonText}>Seleccionar JSON de Equipos</Text>
+        <Text style={styles.buttonText}>Cargar opciones de Equipos</Text>
       </TouchableOpacity>
+      {equiposFile && (
+        <Text style={styles.fileNameText}>Archivo seleccionado: {equiposFile.name}</Text>
+      )}
       <TouchableOpacity style={styles.loadButton} onPress={handleLoadFiles}>
-        <Text style={styles.buttonText}>Cargar Archivos</Text>
+        <Text style={styles.buttonText}>Guardar Opciones</Text>
       </TouchableOpacity>
     </View>
   );
@@ -123,5 +131,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  fileNameText: {
+    color: '#fff',
+    fontSize: 16,
+    marginBottom: 20,
   },
 });

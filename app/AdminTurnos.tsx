@@ -161,9 +161,6 @@ export default function AdminTurnosScreen() {
         )}
         keyExtractor={(item, index) => index.toString()}
       />
-      <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveOptions(optionsData)}>
-        <Text style={styles.buttonText}>Guardar Cambios</Text>
-      </TouchableOpacity>
       <TouchableOpacity style={styles.exportButton} onPress={exportTurnosToJSON}>
         <Text style={styles.buttonText}>Exportar Turnos a JSON</Text>
       </TouchableOpacity>
