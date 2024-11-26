@@ -170,16 +170,6 @@ export default function EquiposScreen() {
           return;
         }
 
-        if (!equipoData.porcentajePetroleo || equipoData.porcentajePetroleo.trim() === '') {
-          Alert.alert('Error', 'El campo de % petróleo no puede estar vacío.');
-          return;
-        }
-
-        if (equipoData.ubicacion.trim() === '') {
-          Alert.alert('Error', 'El campo de ubicación no puede estar vacío.');
-          return;
-        }
-
         if (equipoData.adherenciaPetroleo && equipoData.estandarES) {
           Alert.alert('Error', 'No se puede actualizar el equipo una vez que Adherencia Petróleo y Estándar ES están establecidos.');
           return;
@@ -312,18 +302,13 @@ export default function EquiposScreen() {
           return;
         }
 
-        if (!equipoToEdit.porcentajePetroleo || equipoToEdit.porcentajePetroleo.trim() === '') {
-          Alert.alert('Error', 'El campo de % petróleo no puede estar vacío.');
-          return;
-        }
-
-        if (equipoToEdit.ubicacion.trim() === '') {
-          Alert.alert('Error', 'El campo de ubicación no puede estar vacío.');
-          return;
-        }
-
         if (equipoToEdit.adherenciaPetroleo && equipoToEdit.estandarES) {
           Alert.alert('Error', 'No se puede actualizar el equipo una vez que Adherencia Petróleo y Estándar ES están establecidos.');
+          return;
+        }
+
+        if (equipoToEdit.NombreEntrante) {
+          Alert.alert('Error', 'El equipo ya ha sido editado una vez y no se puede editar más.');
           return;
         }
 
