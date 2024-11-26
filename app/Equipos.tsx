@@ -179,6 +179,16 @@ export default function EquiposScreen() {
           return;
         }
 
+        if (!equipoData.adherenciaPetroleo) {
+          Alert.alert('Error', 'El campo de adherencia de petróleo no puede estar vacío.');
+          return;
+        }
+
+        if (!equipoData.porcentajePetroleo || equipoData.porcentajePetroleo.trim() === '') {
+          Alert.alert('Error', 'El campo de % petróleo no puede estar vacío.');
+          return;
+        }
+
         const updatedEquipos = equipos.map((equipo, index) => 
           index === updateIndex ? { ...equipoData, fecha: getCurrentDate(), NombreEntrante: NombreEntrante } : equipo
         );
@@ -188,9 +198,6 @@ export default function EquiposScreen() {
         resetForm();
         setIsUpdating(false);
         setUpdateIndex(null);
-
-        // Open modal for 'adherenciaPetroleo' options
-        openModal('adherenciaPetroleo');
       }
     } catch (error) {
       console.error("Error updating equipo", error);
@@ -315,6 +322,11 @@ export default function EquiposScreen() {
 
         if (normalizedNombreSaliente === normalizedNombreEntrante) {
           Alert.alert('Error', 'El mismo usuario no puede actualizar el equipo.');
+          return;
+        }
+
+        if (!equipoToEdit.porcentajePetroleo || equipoToEdit.porcentajePetroleo.trim() === '') {
+          Alert.alert('Error', 'El campo de % petróleo no puede estar vacío.');
           return;
         }
 
