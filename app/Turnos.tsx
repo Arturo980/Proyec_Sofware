@@ -127,6 +127,14 @@ export default function TurnosScreen() {
     }
   };
 
+  const normalizeString = (str) => {
+    return str
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "");
+  };
+
   const handleAddTurno = async () => {
     try {
       const NombreSaliente = await AsyncStorage.getItem('userName');
@@ -160,11 +168,24 @@ export default function TurnosScreen() {
       console.error("Error adding turno", error);
     }
   };
-  
+
   const handleEditTurno = async (index) => {
     try {
       const NombreEntrante = await AsyncStorage.getItem('userName');
       if (NombreEntrante != null) {
+        const normalizedNombreSaliente = normalizeString(turnos[index].NombreSaliente);
+        const normalizedNombreEntrante = normalizeString(NombreEntrante);
+
+        if (normalizedNombreSaliente === normalizedNombreEntrante) {
+          Alert.alert('Error', 'El mismo usuario no puede actualizar el turno.');
+          return;
+        }
+
+        if (turnos[index].estatusReal) {
+          Alert.alert('Error', 'No se puede actualizar el turno porque el estatus real ya está establecido.');
+          return;
+        }
+
         setTurnoData(prevState => ({
           ...prevState,
           NombreEntrante: NombreEntrante
@@ -184,6 +205,7 @@ export default function TurnosScreen() {
       console.error("Error editing turno", error);
     }
   };
+
   const resetForm = () => {
     setTurnoData({
       turnoSaliente: '',
