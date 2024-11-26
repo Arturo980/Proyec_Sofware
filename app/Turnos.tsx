@@ -267,37 +267,6 @@ export default function TurnosScreen() {
     );
   };
 
-const handleDeleteAll = async () => {
-    Alert.alert(
-      'Eliminar Todos los Turnos',
-      '¿Estás seguro de que deseas eliminar todos los turnos?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar Todo',
-          onPress: async () => {
-            try {
-              // Eliminar fotos de todos los turnos
-              for (const turno of turnos) {
-                if (turno.photosUri) {
-                  for (const uri of turno.photosUri) {
-                    await FileSystem.deleteAsync(uri, { idempotent: true });
-                  }
-                }
-              }
-
-              await AsyncStorage.removeItem('turnos');
-              setTurnos([]);
-            } catch (e) {
-              console.error("Error deleting all turnos", e);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
   
   const handlePickerOpen = (field) => {
     setCurrentPickerField(field);
@@ -355,13 +324,6 @@ const handleDeleteAll = async () => {
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Turno"}</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, styles.deleteAllButton]} // Apply the deleteAllButton style
-        onPress={handleDeleteAll}
-      >
-        <Text style={styles.buttonText}>Eliminar todos los turnos</Text>
-      </TouchableOpacity>
-  
       {showForm && (
         <View style={styles.formContainer}>
           <TouchableOpacity onPress={() => openModal('turnoSaliente')}>

@@ -428,12 +428,6 @@ export default function EquiposScreen() {
       <TouchableOpacity style={styles.button} onPress={() => setShowForm(!showForm)}>
         <Text style={styles.buttonText}>{showForm ? "Cancelar" : "Agregar Nuevo Equipo"}</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, styles.deleteAllButton, styles.deleteAllButtonMargin]}
-        onPress={handleDeleteAll}
-      >
-        <Text style={styles.buttonText}>Eliminar todos los equipos</Text>
-      </TouchableOpacity>
       {showForm && (
         <View style={styles.formContainer}>
           <TouchableOpacity onPress={() => openModal('equipo')}>

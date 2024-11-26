@@ -79,6 +79,50 @@ export default function HomeScreen() {
     }
   };
 
+  const deleteAllTurnos = async () => {
+    Alert.alert(
+      'Eliminar Todos los Turnos',
+      '¿Estás seguro de que deseas eliminar todos los turnos?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Todo',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('turnos');
+              setTurnos([]);
+            } catch (e) {
+              console.error("Error deleting all turnos", e);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const deleteAllEquipos = async () => {
+    Alert.alert(
+      'Eliminar Todos los Equipos',
+      '¿Estás seguro de que deseas eliminar todos los equipos?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Todo',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('equipos');
+              setEquipos([]);
+            } catch (e) {
+              console.error("Error deleting all equipos", e);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('userName');
@@ -124,6 +168,15 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.importButton} onPress={handleLoadJSON}>
           <Text style={styles.importButtonText}>Importar Opciones</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.deleteAllButton} onPress={deleteAllTurnos}>
+          <Text style={styles.deleteAllButtonText}>Eliminar todos los turnos</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.deleteAllButton} onPress={deleteAllEquipos}>
+          <Text style={styles.deleteAllButtonText}>Eliminar todos los equipos</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Salir</Text>
         </TouchableOpacity>
@@ -236,6 +289,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   importButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  deleteAllButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
+  },
+  deleteAllButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
