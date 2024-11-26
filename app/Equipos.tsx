@@ -754,7 +754,6 @@ export default function EquiposScreen() {
   const renderItem = ({ item, index }) => (
     <View style={styles.row}>
       <Text style={styles.cell}>{item.fecha}</Text>
-      <Text style={styles.cell}>{item.equipo}</Text>
       <Text style={styles.cell}>{item.marca}</Text>
       <Text style={styles.cell}>{item.numeroInterno}</Text>
       <Text style={styles.cell}>{item.operador}</Text>
@@ -762,6 +761,13 @@ export default function EquiposScreen() {
       <Text style={styles.cell}>{item.porcentajePetroleo}</Text>
       <Text style={styles.cell}>{item.observacion}</Text>
       <Text style={styles.cell}>{item.turno}</Text>
+      <Text style={styles.cell}>{item.estandarPetroleo}</Text>
+      <Text style={styles.cell}>{item.adherenciaPetroleo}</Text>
+      <Text style={styles.cell}>{item.ubicacion}</Text>
+      <Text style={styles.cell}>{item.estandarES}</Text>
+      <Text style={styles.cell}>{item.nivel}</Text>
+      <Text style={styles.cell}>{item.report}</Text>
+      <Text style={styles.cell}>{item.grupo}</Text>
       <View style={styles.actionButtons}>
         <TouchableOpacity style={[styles.actionButton, styles.optionsButton]} onPress={() => openModal('options', index)}>
           <Text style={styles.actionText}>Opciones</Text>
@@ -775,7 +781,6 @@ export default function EquiposScreen() {
       return (
         <View style={styles.headerRow}>
           <Text style={styles.headerCell}>Fecha</Text>
-          <Text style={styles.headerCell}>Equipo</Text>
           <Text style={styles.headerCell}>Marca</Text>
           <Text style={styles.headerCell}>Número Interno</Text>
           <Text style={styles.headerCell}>Operador</Text>
@@ -783,6 +788,13 @@ export default function EquiposScreen() {
           <Text style={styles.headerCell}>% Petróleo</Text>
           <Text style={styles.headerCell}>Observación</Text>
           <Text style={styles.headerCell}>Turno</Text>
+          <Text style={styles.headerCell}>Estándar Petróleo</Text>
+          <Text style={styles.headerCell}>Adherencia Petróleo</Text>
+          <Text style={styles.headerCell}>Ubicación</Text>
+          <Text style={styles.headerCell}>Estándar ES</Text>
+          <Text style={styles.headerCell}>Nivel</Text>
+          <Text style={styles.headerCell}>Report</Text>
+          <Text style={styles.headerCell}>Grupo</Text>
           <Text style={styles.headerCell}>Acciones</Text>
         </View>
       );
