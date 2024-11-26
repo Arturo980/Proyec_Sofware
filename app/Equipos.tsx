@@ -188,6 +188,9 @@ export default function EquiposScreen() {
         resetForm();
         setIsUpdating(false);
         setUpdateIndex(null);
+
+        // Open modal for 'adherenciaPetroleo' options
+        openModal('adherenciaPetroleo');
       }
     } catch (error) {
       console.error("Error updating equipo", error);
@@ -218,6 +221,10 @@ export default function EquiposScreen() {
   };
 
   const openModal = (field, index = null) => {
+    if (isUpdating && field !== 'adherenciaPetroleo') {
+      return; // Block other modals when updating
+    }
+  
     setCurrentField(field);
     setSelectedIndex(index);
     let uniqueOptions = [];
