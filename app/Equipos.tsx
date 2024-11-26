@@ -25,7 +25,8 @@ export default function EquiposScreen() {
     nivel: '',  // Add new field
     report: '',  // Add new field
     grupo: '',
-    NombreRegistrante: '',  // Add new field
+    NombreSaliente: '',  // Add new field
+    NombreEntrante: '',  // Add new field
   });
 
   const [equipos, setEquipos] = useState([]);
@@ -150,25 +151,47 @@ export default function EquiposScreen() {
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
 
-  const handleAddEquipo = () => {
-    const newEquipo = { ...equipoData, fecha: getCurrentDate() };
-    const updatedEquipos = [newEquipo, ...equipos]; // Add new equipo at the beginning
-    setEquipos(updatedEquipos);
-    saveEquipos(updatedEquipos);
-    setShowForm(false);
-    resetForm();
+  const handleAddEquipo = async () => {
+    try {
+      const NombreSaliente = await AsyncStorage.getItem('userName');
+      if (NombreSaliente != null) {
+        const newEquipo = { ...equipoData, fecha: getCurrentDate(), NombreSaliente: NombreSaliente };
+        const updatedEquipos = [newEquipo, ...equipos]; // Add new equipo at the beginning
+        setEquipos(updatedEquipos);
+        saveEquipos(updatedEquipos);
+        setShowForm(false);
+        resetForm();
+      }
+    } catch (error) {
+      console.error("Error adding equipo", error);
+    }
   };
 
-  const handleUpdateEquipo = () => {
-    const updatedEquipos = equipos.map((equipo, index) => 
-      index === updateIndex ? { ...equipoData, fecha: getCurrentDate() } : equipo
-    );
-    setEquipos(updatedEquipos);
-    saveEquipos(updatedEquipos);
-    setShowForm(false);
-    resetForm();
-    setIsUpdating(false);
-    setUpdateIndex(null);
+  const handleUpdateEquipo = async () => {
+    try {
+      const NombreEntrante = await AsyncStorage.getItem('userName');
+      if (NombreEntrante != null) {
+        const normalizedNombreSaliente = normalizeString(equipoData.NombreSaliente);
+        const normalizedNombreEntrante = normalizeString(NombreEntrante);
+
+        if (normalizedNombreSaliente === normalizedNombreEntrante) {
+          Alert.alert('Error', 'El mismo usuario no puede actualizar el equipo.');
+          return;
+        }
+
+        const updatedEquipos = equipos.map((equipo, index) => 
+          index === updateIndex ? { ...equipoData, fecha: getCurrentDate(), NombreEntrante: NombreEntrante } : equipo
+        );
+        setEquipos(updatedEquipos);
+        saveEquipos(updatedEquipos);
+        setShowForm(false);
+        resetForm();
+        setIsUpdating(false);
+        setUpdateIndex(null);
+      }
+    } catch (error) {
+      console.error("Error updating equipo", error);
+    }
   };
 
   const resetForm = () => {
@@ -189,7 +212,8 @@ export default function EquiposScreen() {
       nivel: '',  // Reset new field
       report: '',  // Reset new field
       grupo: '',    
-      NombreRegistrante: '',  // Reset new field
+      NombreSaliente: '',  // Reset new field
+      NombreEntrante: '',  // Reset new field
     });
   };
 
@@ -1025,3 +1049,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+const normalizeString = (str) => {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
