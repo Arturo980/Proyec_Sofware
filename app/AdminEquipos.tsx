@@ -112,6 +112,40 @@ export default function AdminEquiposScreen() {
     setIsModalVisible(false);
   };
 
+  const handleEditEquiposOption = () => {
+    if (!editOption || !currentField || !optionsData[currentField]) return;
+    setOptionsData(prevState => {
+      const updatedOptions = [...prevState[currentField]];
+      updatedOptions[editIndex] = { ...updatedOptions[editIndex], Equipo: editOption.Equipo, Marca: editOption.Marca };
+      const newOptionsData = { ...prevState, [currentField]: updatedOptions };
+      handleSaveOptions(newOptionsData); // Save options after editing an option
+      return newOptionsData;
+    });
+    setEditOption('');
+    setEditIndex(null);
+    setIsModalVisible(false);
+  };
+
+  const handleSaveEditedEquipo = () => {
+    console.log('handleSaveEditedEquipo called');
+    console.log('editOption:', editOption);
+    console.log('currentField:', currentField);
+    console.log('editIndex:', editIndex);
+    if (!editOption || !currentField || !optionsData.Equipos) {
+      console.error('Missing required data for saving edited equipo');
+      return;
+    }
+    const updatedOptions = [...optionsData.Equipos];
+    updatedOptions[editIndex] = { ...updatedOptions[editIndex], Equipo: editOption.Equipo, Marca: editOption.Marca };
+    const newOptionsData = { ...optionsData, Equipos: updatedOptions };
+    console.log('newOptionsData:', newOptionsData);
+    handleSaveOptions(newOptionsData); // Save options after editing an option
+    setOptionsData(newOptionsData);
+    setEditOption('');
+    setEditIndex(null);
+    setIsModalVisible(false);
+  };
+
   const handleEditOption = () => {
     console.log('handleEditOption called');
     console.log('currentField:', currentField);
@@ -121,10 +155,13 @@ export default function AdminEquiposScreen() {
       return;
     }
     if (currentField === 'Equipos') {
-      handleSaveEquiposOption();
+      console.log('Editing Equipos');
+      handleSaveEditedEquipo();
     } else if (['NuInterno', 'Estado', 'Petroleo', 'EstandarPetroleo', 'AdherenciaPetroleo', 'Ubicacion', 'EstandarES', 'Nivel', 'Report', 'Grupo'].includes(currentField)) {
+      console.log('Editing NuInterno and below');
       handleSaveNuInternoAndBelowOption();
     } else {
+      console.log('Editing non-Equipos option');
       handleSaveNonEquiposOption();
     }
   };
@@ -160,10 +197,9 @@ export default function AdminEquiposScreen() {
     try {
       await AsyncStorage.setItem('optionsEquipos', JSON.stringify(optionsDataToSave));
       setOptionsData(optionsDataToSave); // Ensure state is updated after saving
-      Alert.alert('Guardado', 'Las opciones se han guardado correctamente.');
+      console.log('Options saved successfully');
     } catch (e) {
       console.error("Error saving options", e);
-      Alert.alert('Error', 'Hubo un problema al guardar las opciones.');
     }
   };
 
@@ -302,7 +338,7 @@ export default function AdminEquiposScreen() {
         <Text style={styles.buttonText}>Guardar Cambios</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.exportButton} onPress={exportEquiposToJSON}>
-        <Text style={styles.buttonText}>Exportar Equipos a JSON</Text>
+        <Text style={styles.buttonText}>Exportar Opciones de Equipos</Text>
       </TouchableOpacity>
       <Modal transparent={true} animationType="slide" visible={isModalVisible}>
         <View style={styles.modalContainer}>
@@ -340,8 +376,8 @@ export default function AdminEquiposScreen() {
                 placeholderTextColor="#888"
               />
             )}
-            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption} disabled={typeof editOption !== 'string' || editOption.trim() === ''}>
-              <Text style={styles.buttonText}>Editar</Text>
+            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption} disabled={!editOption || (typeof editOption === 'string' && editOption.trim() === '')}>
+              <Text style={styles.buttonText}>{currentField === 'Equipos' ? 'Editar Equipo' : 'Editar'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setIsModalVisible(false)}>
               <Text style={styles.buttonText}>Cancelar</Text>
