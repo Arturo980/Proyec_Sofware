@@ -175,6 +175,16 @@ export default function EquiposScreen() {
           return;
         }
 
+        if (equipoData.ubicacion.trim() === '') {
+          Alert.alert('Error', 'El campo de ubicación no puede estar vacío.');
+          return;
+        }
+
+        if (equipoData.adherenciaPetroleo && equipoData.estandarES) {
+          Alert.alert('Error', 'No se puede actualizar el equipo una vez que Adherencia Petróleo y Estándar ES están establecidos.');
+          return;
+        }
+
         const updatedEquipos = equipos.map((equipo, index) => 
           index === updateIndex ? { fecha: getCurrentDate(), ...equipoData, NombreEntrante } : equipo
         );
@@ -214,8 +224,12 @@ export default function EquiposScreen() {
   };
 
   const openModal = (field, index = null) => {
-    if (isUpdating && field !== 'adherenciaPetroleo') {
+    if (isUpdating && field !== 'adherenciaPetroleo' && field !== 'estandarES') {
       return; // Block other modals when updating
+    }
+  
+    if (!isUpdating && (field === 'adherenciaPetroleo' || field === 'estandarES')) {
+      return; // Prevent options from being displayed for adherenciaPetroleo and estandarES when adding a new equipo
     }
   
     setCurrentField(field);
@@ -240,14 +254,8 @@ export default function EquiposScreen() {
         case 'estandarPetroleo':
           uniqueOptions = optionsEquipos.EstandarPetroleo || [];
           break;
-        case 'adherenciaPetroleo':
-          uniqueOptions = optionsEquipos.AdherenciaPetroleo || [];
-          break;
         case 'ubicacion':
           uniqueOptions = optionsEquipos.Ubicacion || [];
-          break;
-        case 'estandarES':
-          uniqueOptions = optionsEquipos.EstandarES || [];
           break;
         case 'nivel':
           uniqueOptions = optionsEquipos.Nivel || [];
@@ -306,6 +314,16 @@ export default function EquiposScreen() {
 
         if (!equipoToEdit.porcentajePetroleo || equipoToEdit.porcentajePetroleo.trim() === '') {
           Alert.alert('Error', 'El campo de % petróleo no puede estar vacío.');
+          return;
+        }
+
+        if (equipoToEdit.ubicacion.trim() === '') {
+          Alert.alert('Error', 'El campo de ubicación no puede estar vacío.');
+          return;
+        }
+
+        if (equipoToEdit.adherenciaPetroleo && equipoToEdit.estandarES) {
+          Alert.alert('Error', 'No se puede actualizar el equipo una vez que Adherencia Petróleo y Estándar ES están establecidos.');
           return;
         }
 
