@@ -305,13 +305,28 @@ export default function EquiposScreen() {
     setIsModalVisible(false);
   };
 
-  const handleEditEquipo = (index) => {
-    const equipoToEdit = equipos[index];
-    setEquipoData(equipoToEdit);
-    setShowForm(true);
-    setIsUpdating(true);
-    setUpdateIndex(index);
-    setModalVisible(false);
+  const handleEditEquipo = async (index) => {
+    try {
+      const NombreEntrante = await AsyncStorage.getItem('userName');
+      if (NombreEntrante != null) {
+        const equipoToEdit = equipos[index];
+        const normalizedNombreSaliente = normalizeString(equipoToEdit.NombreSaliente);
+        const normalizedNombreEntrante = normalizeString(NombreEntrante);
+
+        if (normalizedNombreSaliente === normalizedNombreEntrante) {
+          Alert.alert('Error', 'El mismo usuario no puede actualizar el equipo.');
+          return;
+        }
+
+        setEquipoData(equipoToEdit);
+        setShowForm(true);
+        setIsUpdating(true);
+        setUpdateIndex(index);
+        setModalVisible(false);
+      }
+    } catch (error) {
+      console.error("Error editing equipo", error);
+    }
   };
 
   const handleDeleteEquipo = (index) => {
