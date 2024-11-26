@@ -113,6 +113,13 @@ export default function AdminEquiposScreen() {
   };
 
   const handleEditOption = () => {
+    console.log('handleEditOption called');
+    console.log('currentField:', currentField);
+    console.log('editOption:', editOption);
+    if (!currentField) {
+      console.error('currentField is not set');
+      return;
+    }
     if (currentField === 'Equipos') {
       handleSaveEquiposOption();
     } else if (['NuInterno', 'Estado', 'Petroleo', 'EstandarPetroleo', 'AdherenciaPetroleo', 'Ubicacion', 'EstandarES', 'Nivel', 'Report', 'Grupo'].includes(currentField)) {
@@ -122,84 +129,8 @@ export default function AdminEquiposScreen() {
     }
   };
 
-  const handleSelectEditMarca = (marca) => {
-    setEditOption(prev => ({ ...prev, Marca: [...(prev.Marca || []), marca] }));
-    setIsMarcaModalVisible(false);
-  };
-
-  const handleAddEditMarca = () => {
-    if (newMarca.trim() === '') return;
-    setEditOption(prev => ({ ...prev, Marca: [...(prev.Marca || []), newMarca] }));
-    setNewMarca('');
-    setIsMarcaModalVisible(false);
-  };
-
-  const handleRemoveEditMarca = (marca) => {
-    setEditOption(prev => ({ ...prev, Marca: prev.Marca.filter(m => m !== marca) }));
-  };
-
-  const handleRemoveNewMarca = (marca) => {
-    setNewMarca(prev => prev.split(',').filter(m => m.trim() !== marca).join(', '));
-  };
-
-  const handleDeleteOption = (index) => {
-    if (!currentField || !optionsData[currentField]) return; // Ensure currentField is set and valid
-    Alert.alert(
-      'Eliminar Opción',
-      '¿Estás seguro de que deseas eliminar esta opción?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          onPress: () => {
-            setOptionsData(prevState => {
-              const updatedOptions = [...prevState[currentField]];
-              updatedOptions.splice(index, 1);
-              const newOptionsData = { ...prevState, [currentField]: updatedOptions };
-              handleSaveOptions(newOptionsData); // Save options after deleting an option
-              return newOptionsData;
-            });
-          }
-        }
-      ]
-    );
-  };
-
-  const handleDeleteEquipo = (index) => {
-    if (!currentField || !optionsData[currentField]) return; // Ensure currentField is set and valid
-    Alert.alert(
-      'Eliminar Equipo',
-      '¿Estás seguro de que deseas eliminar este equipo?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          onPress: () => {
-            setOptionsData(prevState => {
-              const updatedOptions = [...prevState.Equipos];
-              updatedOptions.splice(index, 1);
-              const newOptionsData = { ...prevState, Equipos: updatedOptions };
-              handleSaveOptions(newOptionsData); // Save options after deleting an equipo
-              return newOptionsData;
-            });
-          }
-        }
-      ]
-    );
-  };
-
-  const handleSaveOptions = async (optionsDataToSave) => {
-    if (!optionsDataToSave) return;
-    try {
-      await AsyncStorage.setItem('optionsEquipos', JSON.stringify(optionsDataToSave));
-      Alert.alert('Guardado', 'Las opciones se han guardado correctamente.');
-    } catch (e) {
-      console.error("Error saving options", e);
-      Alert.alert('Error', 'Hubo un problema al guardar las opciones.');
-    }
-  };
   const handleEditOption1 = () => {
-    if (editOption.trim() === '' || !currentField) return;
+    if (!editOption || typeof editOption !== 'string' || editOption.trim() === '' || !currentField) return;
     setOptionsData(prevState => {
       const updatedOptions = [...prevState[currentField]];
       updatedOptions[editIndex] = editOption;
@@ -211,6 +142,7 @@ export default function AdminEquiposScreen() {
     setEditIndex(null);
     setIsModalVisible(false);
   };
+
   const handleSaveOptions1 = async (optionsDataToSave) => {
     if (!optionsDataToSave) return;
     try {
@@ -223,6 +155,17 @@ export default function AdminEquiposScreen() {
     }
   };
 
+  const handleSaveOptions = async (optionsDataToSave) => {
+    if (!optionsDataToSave) return;
+    try {
+      await AsyncStorage.setItem('optionsEquipos', JSON.stringify(optionsDataToSave));
+      setOptionsData(optionsDataToSave); // Ensure state is updated after saving
+      Alert.alert('Guardado', 'Las opciones se han guardado correctamente.');
+    } catch (e) {
+      console.error("Error saving options", e);
+      Alert.alert('Error', 'Hubo un problema al guardar las opciones.');
+    }
+  };
 
   const handleOpenAddEquipoModal = () => {
     setIsAddEquipoModalVisible(true);
@@ -262,7 +205,30 @@ export default function AdminEquiposScreen() {
     }
   };
 
-  const renderOption = ({ item, index }) => {
+  const handleAddEditMarca = () => {
+    if (newMarca.trim() === '') return;
+    if (currentField === 'Equipos') {
+      setEditOption(prev => ({ ...prev, Marca: [...(prev.Marca || []), newMarca] }));
+    } else {
+      setNewMarca(prev => prev ? `${prev}, ${newMarca}` : newMarca);
+    }
+    setNewMarca('');
+    setIsMarcaModalVisible(false);
+  };
+
+  const handleSelectEditMarca = (marca) => {
+    setEditOption(prev => ({ ...prev, Marca: [...(prev.Marca || []), marca] }));
+    setIsMarcaModalVisible(false);
+  };
+
+  const handleRemoveEditMarca = (marcaToRemove) => {
+    setEditOption(prev => ({
+      ...prev,
+      Marca: prev.Marca.filter(marca => marca !== marcaToRemove)
+    }));
+  };
+
+  const renderOption = ({ item, index, field }) => {
     if (typeof item === 'object') {
       return (
         <View key={index} style={styles.optionRow}>
@@ -279,7 +245,7 @@ export default function AdminEquiposScreen() {
       return (
         <View style={styles.optionRow}>
           <Text style={styles.optionText}>{item}</Text>
-          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField(currentField); }}>
+          <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField(field); }}>
             <Text style={styles.buttonText}>Editar</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
@@ -300,7 +266,7 @@ export default function AdminEquiposScreen() {
             <Text style={styles.fieldTitle}>{field}</Text>
             <FlatList
               data={optionsData[field]}
-              renderItem={renderOption}
+              renderItem={({ item, index }) => renderOption({ item, index, field })}
               keyExtractor={(item, index) => index.toString()}
             />
             {field === 'Equipos' ? (
@@ -368,14 +334,14 @@ export default function AdminEquiposScreen() {
             ) : (
               <TextInput
                 style={styles.input}
-                value={editOption}
+                value={typeof editOption === 'string' ? editOption : ''}
                 onChangeText={setEditOption}
                 placeholder={`Editar ${currentField}`}
                 placeholderTextColor="#888"
               />
             )}
-            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption} disabled={editOption.trim() === ''}>
-              <Text style={styles.buttonText}>Guardar</Text>
+            <TouchableOpacity style={styles.saveButton} onPress={handleEditOption} disabled={typeof editOption !== 'string' || editOption.trim() === ''}>
+              <Text style={styles.buttonText}>Editar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setIsModalVisible(false)}>
               <Text style={styles.buttonText}>Cancelar</Text>
