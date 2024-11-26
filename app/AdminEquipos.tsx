@@ -198,6 +198,7 @@ export default function AdminEquiposScreen() {
       await AsyncStorage.setItem('optionsEquipos', JSON.stringify(optionsDataToSave));
       setOptionsData(optionsDataToSave); // Ensure state is updated after saving
       console.log('Options saved successfully');
+      Alert.alert('Guardado', 'Los cambios se han guardado correctamente.'); // Add alert here
     } catch (e) {
       console.error("Error saving options", e);
     }
@@ -264,6 +265,52 @@ export default function AdminEquiposScreen() {
     }));
   };
 
+  const handleDeleteEquipo = (index) => {
+    if (!optionsData.Equipos || index < 0 || index >= optionsData.Equipos.length) return; // Ensure valid index
+    Alert.alert(
+      'Eliminar Equipo',
+      '¿Estás seguro de que deseas eliminar este equipo?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: () => {
+            setOptionsData(prevState => {
+              const updatedEquipos = [...prevState.Equipos];
+              updatedEquipos.splice(index, 1);
+              const newOptionsData = { ...prevState, Equipos: updatedEquipos };
+              handleSaveOptions(newOptionsData); // Save options after deleting an equipo
+              return newOptionsData;
+            });
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteOption = (index, field) => {
+    if (!field || !optionsData[field] || index < 0 || index >= optionsData[field].length) return; // Ensure valid index
+    Alert.alert(
+      'Eliminar Opción',
+      '¿Estás seguro de que deseas eliminar esta opción?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          onPress: () => {
+            setOptionsData(prevState => {
+              const updatedOptions = [...prevState[field]];
+              updatedOptions.splice(index, 1);
+              const newOptionsData = { ...prevState, [field]: updatedOptions };
+              handleSaveOptions(newOptionsData); // Save options after deleting an option
+              return newOptionsData;
+            });
+          }
+        }
+      ]
+    );
+  };
+
   const renderOption = ({ item, index, field }) => {
     if (typeof item === 'object') {
       return (
@@ -284,7 +331,7 @@ export default function AdminEquiposScreen() {
           <TouchableOpacity style={styles.editButton} onPress={() => { setEditIndex(index); setEditOption(item); setIsModalVisible(true); setCurrentField(field); }}>
             <Text style={styles.buttonText}>Editar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index)}>
+          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteOption(index, field)}>
             <Text style={styles.buttonText}>Eliminar</Text>
           </TouchableOpacity>
         </View>

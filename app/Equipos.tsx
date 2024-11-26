@@ -92,8 +92,12 @@ export default function EquiposScreen() {
   useEffect(() => {
     const loadOptionsEquipos = async () => {
       try {
-        // Load optionsEquipos from JSON file directly
-        setOptionsEquipos(optionsEquiposJson);
+        const jsonValue = await AsyncStorage.getItem('optionsEquipos');
+        if (jsonValue != null) {
+          setOptionsEquipos(JSON.parse(jsonValue));
+        } else {
+          setOptionsEquipos(optionsEquiposJson);
+        }
       } catch (e) {
         console.error("Error loading optionsEquipos", e);
       }
