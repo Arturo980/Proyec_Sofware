@@ -53,20 +53,6 @@ export default function EquiposScreen() {
   });
   const router = useRouter();
 
-  useEffect(() => {
-    const loadUserName = async () => {
-      try {
-        const NombreRegistrante = await AsyncStorage.getItem('userName');
-        if (NombreRegistrante != null) {
-          setEquipoData(prevState => ({ ...prevState, NombreRegistrante }));
-        }
-      } catch (e) {
-        console.error("Error loading userName", e);
-      }
-    };
-    loadUserName();
-  }, []);
-
   const loadEquipos = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('equipos');
@@ -155,7 +141,7 @@ export default function EquiposScreen() {
     try {
       const NombreSaliente = await AsyncStorage.getItem('userName');
       if (NombreSaliente != null) {
-        const newEquipo = { ...equipoData, fecha: getCurrentDate(), NombreSaliente: NombreSaliente };
+        const newEquipo = { fecha: getCurrentDate(), ...equipoData, NombreSaliente }; // Date as the first data
         const updatedEquipos = [newEquipo, ...equipos]; // Add new equipo at the beginning
         setEquipos(updatedEquipos);
         saveEquipos(updatedEquipos);
@@ -190,7 +176,7 @@ export default function EquiposScreen() {
         }
 
         const updatedEquipos = equipos.map((equipo, index) => 
-          index === updateIndex ? { ...equipoData, fecha: getCurrentDate(), NombreEntrante: NombreEntrante } : equipo
+          index === updateIndex ? { fecha: getCurrentDate(), ...equipoData, NombreEntrante } : equipo
         );
         setEquipos(updatedEquipos);
         saveEquipos(updatedEquipos);
@@ -235,20 +221,13 @@ export default function EquiposScreen() {
     setCurrentField(field);
     setSelectedIndex(index);
     let uniqueOptions = [];
-    if (field === 'marca' && equipoData.equipo) {
+    if (field === 'equipo') {
+      uniqueOptions = optionsEquipos.Equipos ? [...new Set(optionsEquipos.Equipos.map(e => e.Equipo))] : [];
+    } else if (field === 'marca' && equipoData.equipo) {
       const selectedEquipo = optionsEquipos.Equipos.find(e => e.Equipo === equipoData.equipo);
       uniqueOptions = selectedEquipo ? [...new Set(selectedEquipo.Marca)] : [];
-    } else if (field === 'equipo' && equipoData.marca) {
-      const selectedEquipos = optionsEquipos.Equipos.filter(e => e.Marca.includes(equipoData.marca));
-      uniqueOptions = selectedEquipos ? [...new Set(selectedEquipos.map(e => e.Equipo))] : [];
     } else {
       switch (field) {
-        case 'equipo':
-          uniqueOptions = optionsEquipos.Equipos ? [...new Set(optionsEquipos.Equipos.map(e => e.Equipo))] : [];
-          break;
-        case 'marca':
-          uniqueOptions = optionsEquipos.Equipos ? [...new Set(optionsEquipos.Equipos.flatMap(e => e.Marca))] : [];
-          break;
         case 'numeroInterno':
           uniqueOptions = optionsEquipos.NuInterno || [];
           break;
