@@ -68,6 +68,7 @@ export default function AdminEquiposScreen() {
     setNewEquipo('');
     setNewMarca('');
     setIsAddEquipoModalVisible(false);
+    setIsMarcaModalVisible(false); // Close the brand modal after adding a new team
   };
 
   const handleSaveNonEquiposOption = () => {
@@ -309,6 +310,10 @@ export default function AdminEquiposScreen() {
         }
       ]
     );
+  };
+
+  const handleRemoveNewMarca = (marcaToRemove) => {
+    setNewMarca(prev => prev.split(',').map(m => m.trim()).filter(m => m !== marcaToRemove).join(', '));
   };
 
   const renderOption = ({ item, index, field }) => {
