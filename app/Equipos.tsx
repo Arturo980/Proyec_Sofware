@@ -160,6 +160,10 @@ export default function EquiposScreen() {
         const normalizedNombreSaliente = normalizeString(equipoData.NombreSaliente);
         const normalizedNombreEntrante = normalizeString(NombreEntrante);
 
+        console.log("Updating equipo:", equipoData);
+        console.log("NombreSaliente:", equipoData.NombreSaliente);
+        console.log("NombreEntrante:", NombreEntrante);
+
         if (normalizedNombreSaliente === normalizedNombreEntrante) {
           Alert.alert('Error', 'El mismo usuario no puede actualizar el equipo.');
           return;
@@ -167,11 +171,6 @@ export default function EquiposScreen() {
 
         if (!equipoData.adherenciaPetroleo) {
           Alert.alert('Error', 'El campo de adherencia de petróleo no puede estar vacío.');
-          return;
-        }
-
-        if (equipoData.adherenciaPetroleo && equipoData.estandarES) {
-          Alert.alert('Error', 'No se puede actualizar el equipo una vez que Adherencia Petróleo y Estándar ES están establecidos.');
           return;
         }
 
@@ -297,13 +296,12 @@ export default function EquiposScreen() {
         const normalizedNombreSaliente = normalizeString(equipoToEdit.NombreSaliente);
         const normalizedNombreEntrante = normalizeString(NombreEntrante);
 
+        console.log("Editing equipo:", equipoToEdit);
+        console.log("NombreSaliente:", equipoToEdit.NombreSaliente);
+        console.log("NombreEntrante:", NombreEntrante);
+
         if (normalizedNombreSaliente === normalizedNombreEntrante) {
           Alert.alert('Error', 'El mismo usuario no puede actualizar el equipo.');
-          return;
-        }
-
-        if (equipoToEdit.adherenciaPetroleo && equipoToEdit.estandarES) {
-          Alert.alert('Error', 'No se puede actualizar el equipo una vez que Adherencia Petróleo y Estándar ES están establecidos.');
           return;
         }
 
@@ -312,7 +310,11 @@ export default function EquiposScreen() {
           return;
         }
 
-        setEquipoData(equipoToEdit);
+        setEquipoData({
+          ...equipoToEdit,
+          adherenciaPetroleo: equipoToEdit.adherenciaPetroleo || '',
+          estandarES: equipoToEdit.estandarES || ''
+        });
         setShowForm(true);
         setIsUpdating(true);
         setUpdateIndex(index);
