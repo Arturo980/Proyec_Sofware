@@ -29,6 +29,7 @@
       }
     },
     "android": {
+      "screenOrientation": "unspecified",
       "permissions": [
         "CAMERA",
         "WRITE_EXTERNAL_STORAGE",
@@ -43,6 +44,7 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
+      
       "package": "com.mati.muller.Proyec_Sofware"
     },
     "web": {
