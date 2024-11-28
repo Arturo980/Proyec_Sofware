@@ -77,7 +77,7 @@ export default function LoadJSONScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Cargar JSON</Text>
+      <Text style={styles.header}>Cargar Opciones en formato .JSON</Text>
       <TouchableOpacity style={styles.pickButton} onPress={handlePickTurnosFile}>
         <Text style={styles.buttonText}>Cargar opciones de Turnos</Text>
       </TouchableOpacity>
