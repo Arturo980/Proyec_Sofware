@@ -46,7 +46,7 @@ export default function LoginScreen() {
     try {
       await AsyncStorage.setItem('userName', name);
       console.log('Login successful');
-      if (name === 'Admin') {
+      if (name === 'Admin001@') {
         router.push('/AdminHome');
         return;
       } else {
