@@ -162,7 +162,7 @@ export default function AdminTurnosScreen() {
         keyExtractor={(item, index) => index.toString()}
       />
       <TouchableOpacity style={styles.exportButton} onPress={exportTurnosToJSON}>
-        <Text style={styles.buttonText}>Exportar Turnos a JSON</Text>
+        <Text style={styles.buttonText}>Exportar Opciones de Turnos</Text>
       </TouchableOpacity>
       <Modal transparent={true} animationType="slide" visible={isModalVisible}>
         <View style={styles.modalContainer}>
