@@ -7,20 +7,11 @@
     "icon": "./assets/images/logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "bottomTabs": false,
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "permissions": [
-      "CAMERA",
-      "MEDIA_LIBRARY",
-      "MEDIA_LIBRARY_WRITE_ONLY",
-      "WRITE_EXTERNAL_STORAGE",
-      "READ_EXTERNAL_STORAGE",
-      "MANAGE_EXTERNAL_STORAGE"
-    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -29,19 +20,8 @@
       }
     },
     "android": {
-      "screenOrientation": "unspecified",
-      "permissions": [
-        "CAMERA",
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_EXTERNAL_STORAGE",
-        "MEDIA_LIBRARY",
-        "MEDIA_LIBRARY_WRITE_ONLY",
-        "WRITE_INTERNAL_STORAGE",
-        "READ_INTERNAL_STORAGE",
-        "MANAGE_EXTERNAL_STORAGE"
-      ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
+        "foregroundImage": "./assets/images/logo_square.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.mati.muller.Proyec_Sofware"
