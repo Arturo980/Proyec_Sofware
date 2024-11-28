@@ -3,7 +3,7 @@
     "name": "MineTrack",
     "slug": "Proyec_Sofware",
     "version": "1.0.1",
-    "orientation": "DEFAULT",
+    "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
@@ -44,7 +44,6 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      
       "package": "com.mati.muller.Proyec_Sofware"
     },
     "web": {
@@ -53,11 +52,11 @@
       "favicon": "./assets/images/logo.png"
     },
     "plugins": [
-      "expo-router",      
+      "expo-router",
       [
         "expo-screen-orientation",
         {
-          "initialOrientation": "DEFAULT"
+          "initialOrientation": "ALL"
         }
       ]
     ],
