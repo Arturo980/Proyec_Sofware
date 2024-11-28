@@ -173,7 +173,7 @@ export default function TurnosScreen() {
     try {
       const NombreEntrante = await AsyncStorage.getItem('userName');
       if (NombreEntrante != null) {
-        const normalizedNombreSaliente = normalizeString(turnos[index].NombreSaliente);
+        const normalizedNombreSaliente = turnos[index].NombreSaliente ? normalizeString(turnos[index].NombreSaliente) : '';
         const normalizedNombreEntrante = normalizeString(NombreEntrante);
 
         if (normalizedNombreSaliente === normalizedNombreEntrante) {
