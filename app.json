@@ -1,52 +1,41 @@
 {
   "expo": {
-    "name": "MineTrack",
-    "slug": "Proyec_Sofware",
-    "version": "1.0.1",
+    "name": "Capstone_Minera",
+    "slug": "Capstone_Minera",
+    "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo_square.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to take photos.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save photos."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo_square.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.mati.muller.Proyec_Sofware"
+      }
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/logo_square.png"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
-        "expo-screen-orientation",
+        "expo-splash-screen",
         {
-          "initialOrientation": "ALL"
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "7840a397-dffb-4d8d-87f8-613ccfcc85a6"
-      }
     }
   }
 }
